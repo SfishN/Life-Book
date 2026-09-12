@@ -1,0 +1,12 @@
+.next/
+.next-game/
+.vercel/
+node_modules/
+*.tsbuildinfo
+npm-debug.log*
+
+# Local source/reference copies; deployable versions live in public/.
+basics/
+settings/
+documents/
+tests/

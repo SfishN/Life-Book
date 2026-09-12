@@ -1,0 +1,24 @@
+@font-face {
+  font-family: "LifeRoom Hand A";
+  src: url("./A-Kalam-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "LifeRoom Hand B";
+  src: url("./B-RockSalt-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.handwriting-a {
+  font-family: "LifeRoom Hand A", cursive;
+}
+
+.handwriting-b {
+  font-family: "LifeRoom Hand B", cursive;
+  letter-spacing: 0.015em;
+}
