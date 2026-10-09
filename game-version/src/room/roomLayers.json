@@ -1,0 +1,17 @@
+[
+  {"id": "room-base", "source": "01_room_base.png", "file": "01_room_base.webp", "target": [0, 0, 1536, 1024]},
+  {"id": "room-window", "source": "items/room-window.png", "file": "02_window.webp", "target": [1120, 215, 160, 285]},
+  {"id": "room-calendar", "source": "items/room-calendar.png", "file": "09a_calendar.webp", "target": [480, 170, 125, 180]},
+  {"id": "room-pinboard", "source": "items/room-pinboard.png", "file": "09b_pinboard.webp", "target": [865, 180, 155, 175]},
+  {"id": "room-awards", "source": "items/room-awards.png", "file": "09c_awards.webp", "target": [1000, 225, 150, 85]},
+  {"id": "room-frame", "source": "items/room-frame.png", "file": "09d_leaf_frame.webp", "target": [1000, 325, 100, 80]},
+  {"id": "room-rug", "source": "items/room-rug.png", "file": "04a_rug.webp", "target": [880, 600, 320, 145]},
+  {"id": "room-bed", "source": "items/room-bed.png", "file": "03_bed.webp", "target": [525, 245, 500, 355]},
+  {"id": "room-desk", "source": "items/room-desk.png", "file": "04b_desk.webp", "target": [1000, 425, 320, 285]},
+  {"id": "room-bookshelf", "source": "items/room-bookshelf.png", "file": "05_bookshelf.webp", "target": [225, 280, 170, 360]},
+  {"id": "room-mirror", "source": "items/room-mirror.png", "file": "06_mirror.webp", "target": [425, 310, 125, 290]},
+  {"id": "room-plant-shelf", "source": "items/room-plant-shelf.png", "file": "07a_plant_shelf.webp", "target": [305, 193, 100, 105]},
+  {"id": "room-plant-hanging", "source": "items/room-plant-hanging.png", "file": "07b_plant_hanging.webp", "target": [710, 45, 115, 180]},
+  {"id": "room-plant-window", "source": "items/room-plant-window.png", "file": "07e_plant_window.webp", "target": [1210, 405, 60, 80]},
+  {"id": "room-plant-floor", "source": "items/room-plant-floor.png", "file": "07f_plant_floor.webp", "target": [300, 620, 115, 145]}
+]

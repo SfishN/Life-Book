@@ -196,7 +196,7 @@ test("diary evidence never silently awards skill progress or achievements", () =
 });
 
 test("all retained record functions work independently of removed modules", () => {
-  store.getState().setHero({ name: "Alex", pronouns: "they/them", currentTheme: "Learning", reflection: "Keep trying" });
+  store.getState().setHero({ name: "Alex", gender: "male", currentTheme: "Learning", reflection: "Keep trying" });
   store.getState().addSkill("Drawing");
   const skill = store.getState().skills.at(-1);
   store.getState().updateSkill(skill.id, { progress: 40 });
@@ -210,6 +210,20 @@ test("all retained record functions work independently of removed modules", () =
   assert.equal(snapshot.guideMessages.at(-1).role, "user");
   assert.equal(snapshot.chapters[0].approved, true);
   for (const key of ["todos", "quests", "events", "annotations"]) assert.equal(key in snapshot, false);
+});
+
+test("old profiles default to the girl and saved gender selects the boy", async () => {
+  const oldProfile = { name: "Alex", pronouns: "they/them", currentTheme: "Learning", reflection: "Keep trying" };
+  saved.set(GAME_STORAGE_KEY, JSON.stringify({
+    state: { ...getLifeRoomSnapshot(), hero: oldProfile }, version: 0,
+  }));
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().hero, { name: "Alex", gender: "female", currentTheme: "Learning", reflection: "Keep trying" });
+  assert.equal(JSON.parse(saved.get(GAME_STORAGE_KEY)).version, 1);
+  assert.equal("pronouns" in JSON.parse(saved.get(GAME_STORAGE_KEY)).state.hero, false);
+  store.getState().setHero({ ...store.getState().hero, gender: "male" });
+  assert.equal(getLifeRoomSnapshot().hero.gender, "male");
+  assert.equal("pronouns" in getLifeRoomSnapshot().hero, false);
 });
 
 test("navigation and hotspots contain exactly the six selected functions", () => {

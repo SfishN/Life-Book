@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { friendlyDate, todayKey } from "@/domain/dates";
-import type { DiaryEntry, DiaryInput, PanelId } from "@/domain/types";
+import type { DiaryEntry, DiaryInput, HeroProfile, PanelId } from "@/domain/types";
 import { getWeatherPreset, WEATHER_OPTIONS } from "@/domain/weather";
 import { getLifeRoomSnapshot, useLifeRoomStore } from "@/store/useLifeRoomStore";
 
@@ -296,19 +296,31 @@ function HeroPanel() {
   const hero = useLifeRoomStore((state) => state.hero);
   const setHero = useLifeRoomStore((state) => state.setHero);
   const [draft, setDraft, clearDraft] = useTemporaryDraft("hero:profile", hero);
+  const gender = draft.gender === "male" ? "male" : "female";
 
   function save() {
-    setHero(draft);
-    clearDraft(draft);
+    const next: HeroProfile = {
+      name: draft.name,
+      gender,
+      currentTheme: draft.currentTheme,
+      reflection: draft.reflection,
+    };
+    setHero(next);
+    clearDraft(next);
   }
 
   return (
     <div className="hero-sheet">
-      <div className="hero-portrait" aria-hidden="true"><span className="hero-hair" /><span className="hero-face">•‿•</span><span className="hero-scarf" /></div>
+      <div className="hero-portrait" role="img" aria-label={`${gender === "female" ? "Girl" : "Boy"} character, front view`}>
+        <div className="hero-portrait-sprite" style={{ backgroundImage: `url(/characters/${gender === "female" ? "girl" : "boy"}.png)` }} />
+      </div>
       <div className="hero-fields">
         <p className="overline">Your place in this room</p>
         <label>Name<input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} /></label>
-        <label>Pronouns<input value={draft.pronouns} onChange={(event) => setDraft((current) => ({ ...current, pronouns: event.target.value }))} placeholder="Optional" /></label>
+        <fieldset className="hero-gender-choice"><legend>Hero gender</legend>
+          <button type="button" className={gender === "female" ? "is-selected" : ""} aria-pressed={gender === "female"} onClick={() => setDraft((current) => ({ ...current, gender: "female" }))}>Female · girl</button>
+          <button type="button" className={gender === "male" ? "is-selected" : ""} aria-pressed={gender === "male"} onClick={() => setDraft((current) => ({ ...current, gender: "male" }))}>Male · boy</button>
+        </fieldset>
         <label>Current life theme<textarea value={draft.currentTheme} onChange={(event) => setDraft((current) => ({ ...current, currentTheme: event.target.value }))} rows={2} /></label>
         <label>A note to myself<textarea value={draft.reflection} onChange={(event) => setDraft((current) => ({ ...current, reflection: event.target.value }))} rows={3} /></label>
         <button className="primary-button" type="button" onClick={save}>Save profile</button>

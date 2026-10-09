@@ -11,15 +11,28 @@ import type {
 const now = () => new Date().toISOString();
 const id = () => crypto.randomUUID();
 
+const DEFAULT_HERO: HeroProfile = {
+  name: "The Dreamer",
+  gender: "female",
+  currentTheme: "Learning to notice the life I am already living",
+  reflection: "I want this room to hold evidence of patient growth.",
+};
+
+function normalizeHero(hero?: Partial<HeroProfile>): HeroProfile {
+  return {
+    name: typeof hero?.name === "string" ? hero.name : DEFAULT_HERO.name,
+    gender: hero?.gender === "male" ? "male" : "female",
+    currentTheme: typeof hero?.currentTheme === "string" ? hero.currentTheme : DEFAULT_HERO.currentTheme,
+    reflection: typeof hero?.reflection === "string" ? hero.reflection : DEFAULT_HERO.reflection,
+  };
+}
+
 export const GAME_STORAGE_KEY = "life-as-a-room-game-v1";
+const GAME_STORAGE_VERSION = 1;
 
 function initialData(): LifeRoomData {
   return {
-    hero: {
-      name: "The Dreamer", pronouns: "",
-      currentTheme: "Learning to notice the life I am already living",
-      reflection: "I want this room to hold evidence of patient growth.",
-    },
+    hero: { ...DEFAULT_HERO },
     skills: [{ id: "skill-reflection", name: "Reflection", progress: 0, evidence: [] }],
     diary: [],
     achievements: [],
@@ -49,7 +62,7 @@ export type LifeRoomStore = LifeRoomData & LifeRoomActions;
 
 export function snapshotData(state: LifeRoomData): LifeRoomData {
   return {
-    hero: state.hero, skills: state.skills, diary: state.diary,
+    hero: normalizeHero(state.hero), skills: state.skills, diary: state.diary,
     achievements: state.achievements, guideMessages: state.guideMessages,
     chapters: state.chapters, atmosphere: state.atmosphere,
   };
@@ -64,14 +77,14 @@ export const useLifeRoomStore = create<LifeRoomStore>()(
         const change = commitDiary(state, input, entryId, now(), editing);
         if (typeof window !== "undefined") {
           window.localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({
-            state: snapshotData({ ...state, ...change }), version: 0,
+            state: snapshotData({ ...state, ...change }), version: GAME_STORAGE_VERSION,
           }));
         }
         set(change);
       };
       return {
         ...initialData(),
-        setHero: (hero) => set({ hero }),
+        setHero: (hero) => set({ hero: normalizeHero(hero) }),
         addSkill: (name) => set((state) => ({
           skills: [...state.skills, { id: id(), name: name.trim(), progress: 0, evidence: [] }],
         })),
@@ -105,7 +118,19 @@ export const useLifeRoomStore = create<LifeRoomStore>()(
         resetDemo: () => set(initialData()),
       };
     },
-    { name: GAME_STORAGE_KEY, partialize: snapshotData },
+    {
+      name: GAME_STORAGE_KEY,
+      version: GAME_STORAGE_VERSION,
+      partialize: snapshotData,
+      migrate: (persisted) => {
+        const records = persisted as Partial<LifeRoomData> | undefined;
+        return { ...initialData(), ...records, hero: normalizeHero(records?.hero) };
+      },
+      merge: (persisted, current) => {
+        const records = persisted as Partial<LifeRoomData> | undefined;
+        return { ...current, ...records, hero: normalizeHero(records?.hero) };
+      },
+    },
   ),
 );
 

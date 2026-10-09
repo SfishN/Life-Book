@@ -79,6 +79,7 @@ export function LifeRoomApp() {
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [onboarding, setOnboarding] = useState<OnboardingState>(createOnboardingState);
 
+  const heroGender = useLifeRoomStore((state) => state.hero.gender === "male" ? "male" : "female");
   const diaryCount = useLifeRoomStore((state) => state.diary.length);
   const confirmedAchievements = useLifeRoomStore(
     (state) => state.achievements.filter((item) => item.confirmed).length,
@@ -309,6 +310,7 @@ export function LifeRoomApp() {
         atmosphere={atmosphere}
         onboardingStep={onboardingReady ? onboarding.step : "arrival"}
         guidanceMode={onboarding.guidanceMode}
+        heroGender={heroGender}
       />
       <div className="room-vignette" aria-hidden="true" />
 

@@ -56,7 +56,7 @@ export interface LifeNovelChapter {
 
 export interface HeroProfile {
   name: string;
-  pronouns: string;
+  gender: "female" | "male";
   currentTheme: string;
   reflection: string;
 }
