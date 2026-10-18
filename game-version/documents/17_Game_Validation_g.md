@@ -20,13 +20,13 @@ Scope: [PRD_g.md](../PRD_g.md). This record applies to game-version, not the inh
 ## Automated behavior coverage
 
 - Seven distinct lighting presets, including Not recorded.
-- Unknown weather safely resolves to neutral light.
+- Unknown Mood values safely resolve to neutral light.
 - Unsaved drafts do not mutate committed room state.
 - Saving commits diary and atmosphere together under the game-only key.
 - Editing preserves record identity and creation time.
-- Repeated weather saves increment visual feedback revision.
+- Repeated Mood saves increment visual feedback revision.
 - Backdated and same-day entries follow the latest-successful-save rule.
-- Reload/rehydration restores the saved weather and source date.
+- Reload/rehydration restores the saved Mood and source date.
 - Invalid bodies/dates and failed local persistence leave the room unchanged.
 - Diary-to-skill evidence does not automatically award progress or achievements.
 - All six retained record functions work without the removed modules.

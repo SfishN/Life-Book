@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/game-version",
-    name: "Life as a Room — Game",
-    short_name: "Life Game",
-    description: "A room shaped by your diary and the weather you record.",
+    name: "Life Room",
+    short_name: "Life Room",
+    description: "A room shaped by your diary and the mood you choose.",
     start_url: "/",
     display: "standalone",
     background_color: "#332b43",

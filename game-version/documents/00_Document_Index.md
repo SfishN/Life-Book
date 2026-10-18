@@ -2,7 +2,7 @@
 
 ## Current source of truth
 
-- [PRD_g.md](../PRD_g.md): six-function game milestone, weather lighting, explicit diary-save behavior, acceptance criteria, and deferred background story.
+- [PRD_g.md](../basics/PRD_g.md): six-function game milestone, Mood lighting, explicit diary-save behavior, acceptance criteria, and background-story boundaries.
 - [Implementation notes](../process.md): active implementation and validation approach.
 - [README](../README.md): running this version on port 3001.
 - [Game validation](17_Game_Validation_g.md): checks performed and remaining manual validation.

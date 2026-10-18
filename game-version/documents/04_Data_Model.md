@@ -16,7 +16,7 @@ All MVP records belong to the current local user profile and are persisted toget
 | `DayAnnotation` | date, text | One value per calendar date |
 | `CalendarEvent` | date, title | Belongs to one date |
 | `Achievement` | title, description, date, confirmed | User confirmation controls permanence |
-| `GuideMessage` | role, content, source, timestamp | Ordered Mirror conversation |
+| `GuideMessage` | role, content, source, timestamp, room-context consent | Ordered Little Crow conversation; only the current local day is retained |
 | `LifeNovelChapter` | title, body, approved, updated timestamp | Only approved text is treated as lasting narrative |
 
 ## Core Relationships
@@ -39,6 +39,7 @@ Approved records -> LifeNovelChapter draft -> user approval
 4. AI output cannot directly update Skills, Achievements, Hero identity, or Life Novel chapters.
 5. Calendar, Desk, and Bookshelf edits must be immediately consistent.
 6. Dates are stored as local calendar keys in `YYYY-MM-DD` form.
+7. Little Crow messages from earlier local dates are removed during rehydration, snapshotting, or the next companion write.
 
 ## Future Migration Needs
 

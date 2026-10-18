@@ -3,7 +3,8 @@
 | ID | Date | Decision | Rationale | Status |
 | --- | --- | --- | --- | --- |
 | DEC-001 | 2026-08-14 | Build the MVP as a PWA rather than Unity. | Forms, accessibility, iteration, installability, and personal records fit the web platform well. | Accepted |
-| DEC-002 | 2026-08-14 | Name the product Life as a Room. | The name communicates that the room is a representation and record of life, not a game to win. | Accepted |
+| DEC-002 | 2026-08-14 | Use the room-as-life metaphor in the product identity. | The room is a representation and record of life, not a game to win. | Superseded by DEC-003 |
+| DEC-003 | 2026-10-17 | Adopt **Life Room** as the official product name. | A shorter name keeps the established metaphor while being clearer in interface labels, metadata, and sharing. | Accepted |
 | DEC-003 | 2026-08-14 | Use a fixed original 2D room for MVP. | It reduces production complexity while preserving the core metaphor. | Accepted |
 | DEC-004 | 2026-08-14 | Map Mirror to AI Guidance and Bed to Character/Hero. | Mirror supports conversation/reflection; Bed supports the dreamer's identity and private inner life. | Accepted |
 | DEC-005 | 2026-08-14 | Use translucent object-inspired panels over the room. | Records remain practical while the spatial context stays visible. | Accepted |

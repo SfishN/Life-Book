@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { GuidanceMode, OnboardingStep } from "@/domain/onboarding";
 import type { HeroProfile, PanelId, RoomAtmosphere } from "@/domain/types";
-import { getWeatherPreset } from "@/domain/weather";
+import { getMoodPreset } from "@/domain/mood";
 import ROOM_LAYERS from "./roomLayers.json";
 
 interface RoomGameProps {
@@ -13,12 +13,15 @@ interface RoomGameProps {
   atmosphere: RoomAtmosphere;
   onboardingStep: OnboardingStep;
   guidanceMode: GuidanceMode;
-  heroGender: HeroProfile["gender"];
+  heroGender: HeroProfile["avatarStyle"];
 }
 
 type RoomVisualState = Pick<RoomGameProps, "memoryLevel" | "diaryCount" | "atmosphere">;
 const HERO_DISPLAY_HEIGHT = 160;
+const ROOM_WALK_SPEED = 300;
+const INTRODUCTION_WALK_SPEED = 420;
 type IntroAction = "envelope" | "window" | "sweep" | "mirror";
+type RoomKey = "up" | "down" | "left" | "right" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight" | "interact";
 
 interface Hotspot {
   id: PanelId;
@@ -43,10 +46,10 @@ interface IntroductionHotspot {
 
 const HOTSPOTS: Hotspot[] = [
   { id: "achievements", label: "Achievement Wall", x: 1160, y: 720, radiusX: 85, radiusY: 42, clickAreas: [[865, 180, 155, 175], [1000, 225, 150, 85], [1000, 325, 100, 80]] },
+  { id: "guide", label: "Little Crow", x: 430, y: 650, radiusX: 80, radiusY: 58, clickAreas: [[365, 550, 145, 195]] },
   { id: "diary", label: "Diary", x: 365, y: 645, radiusX: 75, radiusY: 38, clickAreas: [[225, 280, 170, 360]] },
-  { id: "guide", label: "Mirror Guide", x: 505, y: 630, radiusX: 70, radiusY: 40, clickAreas: [[425, 310, 125, 290]] },
   { id: "skills", label: "Skill Tree", x: 430, y: 760, radiusX: 75, radiusY: 42, clickAreas: [[300, 620, 115, 145]] },
-  { id: "hero", label: "Hero", x: 790, y: 645, radiusX: 100, radiusY: 48, clickAreas: [[545, 255, 500, 355]] },
+  { id: "hero", label: "Profile", x: 790, y: 645, radiusX: 100, radiusY: 48, clickAreas: [[545, 255, 500, 355]] },
   { id: "novel", label: "Life Novel", x: 710, y: 845, radiusX: 105, radiusY: 50, clickAreas: [[520, 675, 380, 225]] },
 ];
 
@@ -145,10 +148,12 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         private hero!: Phaser.GameObjects.Container;
         private heroSprite!: Phaser.GameObjects.Image;
         private heroFacing: "front" | "back" | "left" | "right" = "front";
-        private currentGender: HeroProfile["gender"] = "female";
-        private keys!: Record<"up" | "down" | "left" | "right" | "interact", Phaser.Input.Keyboard.Key>;
-        private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+        private currentGender: "female" | "male" = "female";
+        private keys!: Record<RoomKey, Phaser.Input.Keyboard.Key>;
         private destination: Phaser.Math.Vector2 | null = null;
+        private virtualMove = { x: 0, y: 0 };
+        private pinchStartDistance = 0;
+        private pinchStartZoom = 1;
         private nearest: Hotspot | null = null;
         private introNearest: IntroductionHotspot | null = null;
         private introPrompt = "";
@@ -181,8 +186,8 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         private lightTransition = { value: 0 };
 
         private onHeroGender = (event: Event) => {
-          const gender = (event as CustomEvent<HeroProfile["gender"]>).detail;
-          this.currentGender = gender === "male" ? "male" : "female";
+          const gender = (event as CustomEvent<HeroProfile["avatarStyle"]>).detail;
+          this.currentGender = gender === "boy" ? "male" : "female";
           if (this.heroSprite) {
             this.heroSprite.setTexture(`hero-${this.currentGender}`, `${this.heroFacing}-0`);
             this.heroSprite.setScale(HERO_DISPLAY_HEIGHT / this.heroSprite.height);
@@ -205,6 +210,14 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           if (action === "sweep" && this.onboardingStep === "net") this.sweepNet();
           else if (this.introNearest?.action === action) this.performIntroductionAction(action);
         };
+        private onVirtualMove = (event: Event) => {
+          const detail = (event as CustomEvent<{ x?: number; y?: number }>).detail;
+          const x = Number.isFinite(detail?.x) ? Number(detail.x) : 0;
+          const y = Number.isFinite(detail?.y) ? Number(detail.y) : 0;
+          const length = Math.hypot(x, y);
+          this.virtualMove = length > 1 ? { x: x / length, y: y / length } : { x, y };
+          if (length > 0.04) this.destination = null;
+        };
 
         constructor() {
           super("dream-room");
@@ -225,6 +238,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         }
 
         create() {
+          this.input.addPointer(1);
           this.roomLayers = ROOM_LAYERS.map((layer, index) => {
             const [x, y] = layer.target;
             return this.add.image(x, y, layer.id).setOrigin(0, 0).setDepth(index / 100);
@@ -259,6 +273,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           }).setDepth(3);
 
           for (const hotspot of HOTSPOTS) {
+            if (hotspot.id === "guide") continue;
             this.add.ellipse(hotspot.x, hotspot.y, hotspot.radiusX * 2, hotspot.radiusY * 2)
               .setStrokeStyle(3, 0xffe7aa, 0.13)
               .setFillStyle(0xffe7aa, 0.015)
@@ -280,7 +295,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
             this.anims.create({ key: "intro-pet-flutter", frames: this.anims.generateFrameNumbers("intro-pet", { start: 0, end: 7 }), frameRate: 9, repeat: -1 });
           }
 
-          this.currentGender = heroGenderRef.current;
+          this.currentGender = heroGenderRef.current === "boy" ? "male" : "female";
           this.hero = this.createHero(745, 780).setDepth(8);
           const keyboard = this.input.keyboard;
           if (keyboard) {
@@ -289,13 +304,20 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
               down: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
               left: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
               right: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+              arrowUp: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
+              arrowDown: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
+              arrowLeft: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
+              arrowRight: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
               interact: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
             };
-            this.cursors = keyboard.createCursorKeys();
           }
 
           this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
             if (this.panelOpen) return;
+            if (this.input.manager.pointers.filter((item) => item.isDown).length > 1) {
+              this.destination = null;
+              return;
+            }
             const point = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
             if (this.onboardingStep !== "complete") {
               if (this.onboardingStep === "net") {
@@ -325,6 +347,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           window.addEventListener("life-room:memory", this.onMemory);
           window.addEventListener("life-room:onboarding", this.onOnboarding);
           window.addEventListener("life-room:onboarding-command", this.onOnboardingCommand);
+          window.addEventListener("life-room:virtual-move", this.onVirtualMove);
           this.applyVisualState(visualRef.current, false);
           this.onboardingStep = onboardingRef.current.step;
           this.guidanceMode = onboardingRef.current.guidanceMode;
@@ -337,6 +360,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
             window.removeEventListener("life-room:memory", this.onMemory);
             window.removeEventListener("life-room:onboarding", this.onOnboarding);
             window.removeEventListener("life-room:onboarding-command", this.onOnboardingCommand);
+            window.removeEventListener("life-room:virtual-move", this.onVirtualMove);
           });
         }
 
@@ -354,6 +378,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         private setPaused(pausedState: boolean) {
           this.panelOpen = pausedState;
           this.destination = null;
+          this.virtualMove = { x: 0, y: 0 };
           this.input.keyboard?.resetKeys();
         }
 
@@ -375,7 +400,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           if (this.onboardingStep === "net" && !this.currentBird) this.startNetSequence();
           if (this.onboardingStep !== "net") this.clearFlock();
 
-          const petShouldStay = ["mirror", "diary", "index", "complete"].includes(this.onboardingStep);
+          const petShouldStay = !["arrival", "envelope", "window", "net"].includes(this.onboardingStep);
           this.pet.setVisible(petShouldStay);
           if (petShouldStay && !this.reducedMotion) this.pet.play("intro-pet-flutter", true);
           else this.pet.stop().setFrame(0);
@@ -399,11 +424,11 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
             this.pet.setPosition(430, 650).setScale(0.28).setAlpha(0.45);
             this.footprints.setVisible(false);
           } else if (this.guidanceMode === "nudge") {
-            this.pet.setPosition(355, 670).setScale(0.28).setAlpha(0.72);
-            this.footprints.setPosition(315, 675).setAlpha(0.32).setVisible(true);
+            this.pet.setPosition(425, 650).setScale(0.28).setAlpha(0.72);
+            this.footprints.setPosition(360, 675).setAlpha(0.32).setVisible(true);
           } else {
-            this.pet.setPosition(260, 675).setScale(0.28).setAlpha(0.94);
-            this.footprints.setPosition(255, 690).setAlpha(0.58).setVisible(true);
+            this.pet.setPosition(420, 650).setScale(0.28).setAlpha(0.94);
+            this.footprints.setPosition(350, 680).setAlpha(0.58).setVisible(true);
           }
         }
 
@@ -551,7 +576,7 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
 
         private applyVisualState(state: RoomVisualState, animate: boolean) {
           if (!this.memoryGlow) return;
-          const preset = getWeatherPreset(state.atmosphere.weather);
+          const preset = getMoodPreset(state.atmosphere.mood);
           const duration = animate && !this.reducedMotion ? 900 : 0;
           this.memoryGlow.frequency = Math.max(280, 920 - state.memoryLevel * 45);
           const oldTint = this.background.tintTopLeft;
@@ -585,13 +610,22 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           }
           this.memoryBooks.clear();
           const colors = [0xd99799, 0x9bb5a0, 0xe3b56f, 0xb7a5cd, 0x9fbfd4];
+          const shelfRows = [330, 414, 500, 579];
           for (let index = 0; index < Math.min(state.diaryCount, 12); index += 1) {
-            const x = 255 + index * 9;
-            const y = 390 - (index % 3) * 3;
+            const row = Math.floor(index / 3);
+            const column = index % 3;
+            const x = 254 + column * 15;
+            const y = shelfRows[row] - (column % 2) * 3;
+            const height = 56 + (index % 3) * 3;
+            this.memoryBooks.fillStyle(0x2f2033, 0.34);
+            this.memoryBooks.fillRoundedRect(x - 2, y + 4, 15, height, 3);
             this.memoryBooks.fillStyle(colors[index % colors.length], 1);
-            this.memoryBooks.fillRoundedRect(x, y, 7, 30 + (index % 3) * 3, 2);
-            this.memoryBooks.lineStyle(1, 0xfff1d7, 0.8);
-            this.memoryBooks.lineBetween(x + 1, y + 7, x + 5, y + 7);
+            this.memoryBooks.fillRoundedRect(x, y, 11, height, 2);
+            this.memoryBooks.lineStyle(1.5, 0xffedbd, 0.96);
+            this.memoryBooks.strokeRoundedRect(x, y, 11, height, 2);
+            this.memoryBooks.lineStyle(1, 0xfff5d9, 0.92);
+            this.memoryBooks.lineBetween(x + 2, y + 9, x + 9, y + 9);
+            this.memoryBooks.lineBetween(x + 2, y + height - 8, x + 9, y + height - 8);
           }
           if (animate && state.atmosphere.revision > this.lastRevision) {
             this.tweens.killTweensOf(this.saveHalo);
@@ -656,12 +690,12 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         }
 
         private updateHero(delta: number) {
-          const speed = 270;
-          const movement = new Phaser.Math.Vector2(0, 0);
-          if (this.keys.left.isDown || this.cursors.left.isDown) movement.x -= 1;
-          if (this.keys.right.isDown || this.cursors.right.isDown) movement.x += 1;
-          if (this.keys.up.isDown || this.cursors.up.isDown) movement.y -= 1;
-          if (this.keys.down.isDown || this.cursors.down.isDown) movement.y += 1;
+          const speed = this.onboardingStep === "complete" ? ROOM_WALK_SPEED : INTRODUCTION_WALK_SPEED;
+          const movement = new Phaser.Math.Vector2(this.virtualMove.x, this.virtualMove.y);
+          if (this.keys.left.isDown || this.keys.arrowLeft.isDown) movement.x -= 1;
+          if (this.keys.right.isDown || this.keys.arrowRight.isDown) movement.x += 1;
+          if (this.keys.up.isDown || this.keys.arrowUp.isDown) movement.y -= 1;
+          if (this.keys.down.isDown || this.keys.arrowDown.isDown) movement.y += 1;
           let moving = false;
           if (movement.lengthSq() > 0) {
             this.destination = null;
@@ -689,6 +723,30 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
           if (this.onboardingStep === "net") this.net.setPosition(this.hero.x + (this.heroFacing === "left" ? -42 : 42), this.hero.y - 28).setDepth(this.hero.depth + 1).setFlipX(this.heroFacing === "left");
         }
 
+        private updatePinchZoom(): boolean {
+          const pointers = this.input.manager.pointers.filter((pointer) => pointer.isDown);
+          if (pointers.length < 2) {
+            this.pinchStartDistance = 0;
+            return false;
+          }
+          const [first, second] = pointers;
+          const distance = Phaser.Math.Distance.Between(first.x, first.y, second.x, second.y);
+          if (!this.pinchStartDistance) {
+            this.pinchStartDistance = Math.max(1, distance);
+            this.pinchStartZoom = this.cameras.main.zoom;
+            this.destination = null;
+            this.virtualMove = { x: 0, y: 0 };
+            return true;
+          }
+          const zoom = Phaser.Math.Clamp(
+            this.pinchStartZoom * distance / this.pinchStartDistance,
+            1,
+            1.8,
+          );
+          this.cameras.main.setZoom(zoom).centerOn(768, 512);
+          return true;
+        }
+
         private refreshFurnitureProximity() {
           let nearest: Hotspot | null = null;
           let nearestDistance = Number.POSITIVE_INFINITY;
@@ -708,7 +766,8 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
         }
 
         update(_time: number, delta: number) {
-          if (!this.keys || !this.cursors || this.panelOpen) return;
+          if (!this.keys || this.panelOpen) return;
+          if (this.updatePinchZoom()) return;
           this.updateHero(delta);
           if (this.onboardingStep !== "complete") {
             if (this.nearest) {
@@ -751,5 +810,5 @@ export function RoomGame({ paused, memoryLevel, diaryCount, atmosphere, onboardi
     };
   }, []);
 
-  return <div className="room-game" ref={hostRef} aria-label="Interactive diary room. Use WASD or Arrow Keys to move, E to interact, or the Room Index for direct furniture access." />;
+  return <div className="room-game" ref={hostRef} aria-label="Interactive diary room. Use WASD, Arrow Keys, the touch joystick, or tap to move. Pinch with two fingers to zoom. Use E or tap an object to interact." />;
 }

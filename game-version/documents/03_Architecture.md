@@ -38,7 +38,7 @@ User
 - One Next.js application
 - One dynamic API route: `/api/guide`
 - Static room artwork and PWA assets under `public/`
-- Browser-local persistence key: `life-as-a-room-v1`
+- Browser-local persistence: versioned `life-room-*` namespace with backward-compatible reads from the previous production store until migration succeeds
 - Environment configuration documented in `.env.example`
 
 ## Quality Attributes

@@ -6,7 +6,7 @@ import {
   BedDouble,
   BookHeart,
   BookOpenText,
-  Bot,
+  Bird,
   DoorOpen,
   Footprints,
   HelpCircle,
@@ -26,13 +26,14 @@ import {
   writeOnboardingState,
 } from "@/domain/onboarding";
 import type { PanelId } from "@/domain/types";
-import { getWeatherPreset } from "@/domain/weather";
+import { getMoodPreset } from "@/domain/mood";
 import { friendlyDate } from "@/domain/dates";
 import { FurniturePanel } from "@/furniture/FurniturePanel";
 import { IntroductionOverlay } from "@/onboarding/IntroductionOverlay";
 import { RoomGame } from "@/room/RoomGame";
 import { useLifeRoomStore } from "@/store/useLifeRoomStore";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { VirtualJoystick } from "@/components/VirtualJoystick";
 
 interface Proximity {
   panel: PanelId;
@@ -48,9 +49,9 @@ type OnboardingSceneAction = OnboardingProximity["action"] | "net-complete";
 
 const ROOM_INDEX: Array<{ id: PanelId; label: string; object: string; icon: typeof BookHeart }> = [
   { id: "diary", label: "Diary", object: "Bookshelf", icon: BookHeart },
-  { id: "guide", label: "AI Guidance", object: "Mirror", icon: Bot },
+  { id: "guide", label: "AI Companion", object: "Little Crow", icon: Bird },
   { id: "skills", label: "Skill Tree", object: "Plant", icon: Leaf },
-  { id: "hero", label: "Hero", object: "Bed", icon: BedDouble },
+  { id: "hero", label: "Profile", object: "Bed", icon: BedDouble },
   { id: "achievements", label: "Achievements", object: "Achievement wall", icon: Award },
   { id: "novel", label: "Life Novel", object: "Room", icon: BookOpenText },
 ];
@@ -60,6 +61,36 @@ const OBJECTIVES: Partial<Record<OnboardingState["step"], string>> = {
   window: "A pale mark has appeared on the window.",
   net: "Catch three crossings. Missed shapes always return.",
   mirror: "Something moved behind the standing mirror.",
+};
+
+const INSTRUCTION_STEPS = new Set<OnboardingState["step"]>([
+  "diary",
+  "skills",
+  "profile",
+  "achievements",
+  "novel",
+  "companion",
+  "reveal",
+  "adoption",
+]);
+
+const INSTRUCTION_PANELS: Partial<Record<OnboardingState["step"], PanelId>> = {
+  diary: "diary",
+  skills: "skills",
+  profile: "hero",
+  achievements: "achievements",
+  novel: "novel",
+  companion: "guide",
+};
+
+const NEXT_INSTRUCTION_STEP: Partial<Record<OnboardingState["step"], OnboardingState["step"]>> = {
+  diary: "skills",
+  skills: "profile",
+  profile: "achievements",
+  achievements: "novel",
+  novel: "companion",
+  companion: "reveal",
+  reveal: "adoption",
 };
 
 export function LifeRoomApp() {
@@ -79,26 +110,24 @@ export function LifeRoomApp() {
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [onboarding, setOnboarding] = useState<OnboardingState>(createOnboardingState);
 
-  const heroGender = useLifeRoomStore((state) => state.hero.gender === "male" ? "male" : "female");
+  const heroGender = useLifeRoomStore((state) => state.hero.avatarStyle);
   const diaryCount = useLifeRoomStore((state) => state.diary.length);
   const confirmedAchievements = useLifeRoomStore(
-    (state) => state.achievements.filter((item) => item.confirmed).length,
+    (state) => state.achievements.filter((item) => item.status === "pinned").length,
   );
   const chapterCount = useLifeRoomStore((state) => state.chapters.length);
-  const resetDemo = useLifeRoomStore((state) => state.resetDemo);
   const atmosphere = useLifeRoomStore((state) => state.atmosphere);
-  const weather = getWeatherPreset(atmosphere.weather);
+  const mood = getMoodPreset(atmosphere.mood);
   const memoryLevel = diaryCount + confirmedAchievements * 2 + chapterCount * 3;
   const introductionActive = onboarding.status !== "complete";
   const showArrival = onboardingReady && introductionActive && onboarding.step === "arrival";
-  const showFunctionIntroduction = onboardingReady && (onboarding.step === "index" || reviewFunctions);
+  const showFunctionIntroduction = onboardingReady && (INSTRUCTION_STEPS.has(onboarding.step) || reviewFunctions);
   const objective = introductionActive ? OBJECTIVES[onboarding.step] : null;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const restored = readOnboardingState(window.localStorage);
       setOnboarding(restored);
-      if (restored.step === "diary" && restored.status !== "complete") setActivePanel("diary");
       setOnboardingReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -203,7 +232,7 @@ export function LifeRoomApp() {
     moveTo("envelope");
   }
 
-  function replayIntroduction() {
+  function resetIntroduction() {
     const fresh = { ...createOnboardingState(), guidanceMode: onboarding.guidanceMode };
     persistOnboarding(fresh);
     setSceneNote(null);
@@ -220,7 +249,9 @@ export function LifeRoomApp() {
     setSceneNote(null);
     setActivePanel(null);
     setShowHelp(false);
-    moveTo("index");
+    setReviewFunctions(false);
+    persistOnboarding(moveOnboardingTo(onboarding, "complete"));
+    setSaveNotice("Introduction skipped. You can reset it from Help without changing your records.");
   }
 
   function continueStoryNote() {
@@ -228,7 +259,6 @@ export function LifeRoomApp() {
     if (sceneNote === "window") moveTo("net");
     if (sceneNote === "mirror") {
       moveTo("diary");
-      setActivePanel("diary");
     }
     setSceneNote(null);
   }
@@ -241,7 +271,7 @@ export function LifeRoomApp() {
     setNudgeCueReady(false);
     persistOnboarding(moveOnboardingTo(onboarding, "complete"));
     setReviewFunctions(false);
-    setSaveNotice("The room is open. The small shape remains near the mirror, watching where you choose to go.");
+    setSaveNotice("The room is open. The little crow remains nearby, watching where you choose to go.");
   }
 
   function openPanel(panel: PanelId) {
@@ -251,29 +281,28 @@ export function LifeRoomApp() {
   }
 
   function closePanel() {
+    const closingPanel = activePanel;
     setActivePanel(null);
-    if (onboarding.step === "diary" && introductionActive) moveTo("index");
+    if (!introductionActive) return;
+    const expectedPanel = INSTRUCTION_PANELS[onboarding.step];
+    const next = NEXT_INSTRUCTION_STEP[onboarding.step];
+    if (expectedPanel && closingPanel === expectedPanel && next) moveTo(next);
   }
 
   function diarySaved() {
     const savedAtmosphere = useLifeRoomStore.getState().atmosphere;
-    const preset = getWeatherPreset(savedAtmosphere.weather);
+    const preset = getMoodPreset(savedAtmosphere.mood);
     setActivePanel(null);
     setSaveNotice(`Diary saved. ${preset.description} Your bookshelf remembers this moment.`);
     if (onboarding.step === "diary" && introductionActive) {
       setDiaryWasSaved(true);
-      moveTo("index");
+      moveTo("skills");
     }
   }
 
-  function resetGame() {
-    if (!window.confirm("Reset only this game version's local records? This cannot be undone. Introduction progress is kept, and room-version records are not affected.")) return;
-    resetDemo();
-    Object.keys(window.localStorage)
-      .filter((key) => key.startsWith("life-as-a-room-game-draft:"))
-      .forEach((key) => window.localStorage.removeItem(key));
-    setSaveNotice("");
-    setShowHelp(false);
+  function advanceInstruction() {
+    const next = NEXT_INSTRUCTION_STEP[onboarding.step];
+    if (next) moveTo(next);
   }
 
   function sendOnboardingCommand() {
@@ -301,7 +330,7 @@ export function LifeRoomApp() {
     && (onboarding.guidanceMode === "lead" || (onboarding.guidanceMode === "nudge" && nudgeCueReady));
 
   return (
-    <main className="life-room-app" data-weather={atmosphere.weather} data-room-revision={atmosphere.revision} data-onboarding-step={onboarding.step}>
+    <main className="life-room-app" data-mood={atmosphere.mood} data-room-revision={atmosphere.revision} data-onboarding-step={onboarding.step}>
       <ServiceWorkerRegistration />
       <RoomGame
         paused={Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen)}
@@ -315,12 +344,12 @@ export function LifeRoomApp() {
       <div className="room-vignette" aria-hidden="true" />
 
       <header className="room-header">
-        <div><p className="room-kicker">Life as a Room · Game</p><p className="room-date">{dateLabel}</p></div>
+        <div><p className="room-kicker">Life Room</p><p className="room-date">{dateLabel}</p></div>
         <div className="header-actions">
           <span className="room-status">{diaryCount} diary entries · {memoryLevel} memories</span>
-          <button className="glass-button" type="button" onClick={() => openPanel("diary")}><BookHeart size={17} /> Diary</button>
-          <button className="glass-button" type="button" onClick={() => setShowHelp(true)}><HelpCircle size={17} /> Help</button>
-          <button className="glass-button" type="button" onClick={() => setShowRoomIndex((value) => !value)} aria-expanded={showRoomIndex}><Menu size={17} /> Room index</button>
+          <button className="glass-button" type="button" aria-label="Diary" onClick={() => openPanel("diary")}><BookHeart size={17} /><span>Diary</span></button>
+          <button className="glass-button" type="button" aria-label="Help" onClick={() => setShowHelp(true)}><HelpCircle size={17} /><span>Help</span></button>
+          <button className="glass-button" type="button" aria-label="Room index" onClick={() => setShowRoomIndex((value) => !value)} aria-expanded={showRoomIndex}><Menu size={17} /><span>Room index</span></button>
         </div>
       </header>
 
@@ -339,7 +368,10 @@ export function LifeRoomApp() {
         </nav>
       )}
 
-      <aside className="atmosphere-caption" aria-label="Room lighting"><span className={`weather-swatch weather-${atmosphere.weather}`} aria-hidden="true" /><div><strong>{weather.label === "Not recorded" ? "Gentle room light" : `${weather.label} light`}</strong><small>{atmosphere.sourceDate ? `From your diary · ${friendlyDate(atmosphere.sourceDate)}` : "Save a diary to bring the day's weather inside"}</small></div></aside>
+      <aside className="atmosphere-caption" aria-label="Room lighting"><span className={"mood-swatch mood-" + atmosphere.mood} aria-hidden="true" /><div><strong>{mood.label + " light"}</strong><small>{atmosphere.sourceDate ? "From your diary · " + friendlyDate(atmosphere.sourceDate) : "Save a diary Mood to shape the room light"}</small></div></aside>
+
+      {!Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen) && <VirtualJoystick />}
+      {!Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen) && <p className="mobile-touch-hint">Tap to walk · Pinch to zoom</p>}
 
       {saveNotice && <div className="room-save-notice" role="status"><BookHeart size={20} aria-hidden="true" /><p>{saveNotice}</p><button className="icon-button" type="button" onClick={() => setSaveNotice("")} aria-label="Dismiss message"><X size={17} /></button></div>}
 
@@ -352,10 +384,10 @@ export function LifeRoomApp() {
 
       {activePanel && <FurniturePanel panel={activePanel} onClose={closePanel} onDiarySaved={diarySaved} />}
 
-      <IntroductionOverlay note={sceneNote} showArrival={showArrival} showIndex={showFunctionIntroduction} guidanceMode={onboarding.guidanceMode} diaryWasSaved={diaryWasSaved} onBegin={beginIntroduction} onContinue={continueStoryNote} onSkip={skipIntroduction} onComplete={finishIntroduction} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
+      <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={showFunctionIntroduction} reviewMode={reviewFunctions} guidanceMode={onboarding.guidanceMode} diaryWasSaved={diaryWasSaved} onBegin={beginIntroduction} onContinue={continueStoryNote} onSkip={skipIntroduction} onAdvance={advanceInstruction} onComplete={finishIntroduction} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
 
       {showHelp && (
-        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys to move, E to interact, and Esc to close. Click or tap an object for direct access. Records stay in this browser; the Mirror shares saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{introductionActive ? <button className="small-button" type="button" onClick={skipIntroduction}>Skip to room functions</button> : <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={replayIntroduction}><RotateCcw size={16} /> Replay introduction</button><button className="ghost-button" type="button" onClick={resetGame}>Reset game records</button></div></section></div>
+        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move, and pinch with two fingers to zoom. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{introductionActive ? <button className="small-button" type="button" onClick={skipIntroduction}>Skip to room functions</button> : <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
       )}
 
       {showExit && <div className="intro-backdrop"><section className="exit-card" role="alertdialog" aria-modal="true" aria-labelledby="exit-title"><DoorOpen size={28} aria-hidden="true" /><h1 id="exit-title">Leave the room for now?</h1>{safeToClose ? <p>Your records are saved locally. It is safe to close this tab or app window.</p> : <p>Your local records and introduction progress are already saved. The room will be here when you return.</p>}<div className="button-row">{!safeToClose && <button className="primary-button" type="button" onClick={attemptExit}>Exit app</button>}<button className="small-button" type="button" onClick={() => { setShowExit(false); setSafeToClose(false); }}>{safeToClose ? "Return to room" : "Stay"}</button></div></section></div>}

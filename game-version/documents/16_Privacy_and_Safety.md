@@ -2,11 +2,11 @@
 
 ## Product Position
 
-Life as a Room stores personal plans, reflections, identity notes, and inferred growth. Treat this as sensitive personal content even when it does not meet a legal special-category definition. The product is not therapy, diagnosis, or emergency support.
+Life Room stores personal plans, reflections, identity notes, and inferred growth. Treat this as sensitive personal content even when it does not meet a legal special-category definition. The product is not therapy, diagnosis, or emergency support.
 
 ## Current MVP Data Behavior
 
-- Records are stored in browser-local persistence under `life-as-a-room-v1`.
+- Records are stored in a versioned browser-local `life-room-*` namespace. Previous production stores are read only for non-destructive migration and rollback until the migrated data has been verified.
 - There is no account, cloud backup, or multi-device synchronization.
 - When no OpenAI key is configured, Mirror messages receive a local fallback response.
 - When OpenAI is configured, the current message plus selected Hero, task, Diary, Quest, and Skill context is sent through the server route.

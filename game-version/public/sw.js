@@ -1,4 +1,4 @@
-const CACHE_NAME = "life-as-a-room-game-v6";
+const CACHE_NAME = "life-room-v8";
 const CORE_ASSETS = [
   "/",
   "/room/layers/01_room_base.webp",

@@ -1,15 +1,15 @@
-# Life as a Room — Mystery Introduction MVP
+# Life Room — Mystery Introduction MVP
 
-Version: g0.2  
-Date: 2026-09-12  
+Version: g0.3  
+Date: 2026-10-18  
 Depends on: `PRD_g.md` and `background.md`  
 Status: Proposed implementation scope
 
 ## 1. MVP outcome
 
-Replace the current explanatory welcome card with an optional, replayable mystery introduction set entirely inside the existing room. The introduction teaches movement, interaction, the Diary save-to-room loop, the locations and limits of all six retained self-management functions, and one guidance-intensity preference.
+Use an optional, resettable mystery introduction set entirely inside the existing room. The introduction teaches movement, interaction, the Diary save-to-room loop, and the purpose and limits of all six retained self-management functions through a sequential in-world instruction flow.
 
-The MVP ends when free exploration begins. It does not reveal A/B's temporal positions, the staged joke, the nature of the flying shapes, or the identity of the remaining form.
+The MVP ends after the rounded and sharp hands reveal their future/past positions, agree that the one in the middle will raise the little crow, and unlock free exploration. The room's larger history and temporal mechanism remain unresolved.
 
 Target first-run duration: **8–12 minutes**.  
 Target replay duration with known actions: **4–6 minutes**.
@@ -22,10 +22,10 @@ The current `game-version` provides:
 - One fixed 1536 × 1024 isometric room image: `public/room/dream-room.png`.
 - A procedurally drawn movable Hero and room light overlays.
 - WASD movement, E interaction, click/tap movement and object access, Esc close/exit, and an accessible Room Index.
-- Six active functions only: Diary, AI Guidance, Skill Tree, Achievement Wall, Hero, and Life Novel.
-- An explicit Diary save that commits the entry and weather, closes the panel, changes the room light, and marks the bookshelf.
-- Seven user-recorded weather states: Not recorded, Sunny, Cloudy, Rainy, Snowy, Foggy, and Stormy.
-- Optional AI use in the Mirror; all other functions work without AI or network access.
+- Six active functions only: Diary, AI Companion, Skill Tree, Achievement Wall, Hero, and Life Novel.
+- An explicit Diary save that commits the entry and Mood, closes the panel, changes the room light, and marks the bookshelf.
+- Five user-chosen Mood states: Calm, Happy, Neutral, Tired, and Stressed.
+- Optional AI use through the Little Crow; all other functions work without AI or network access.
 
 The introduction must preserve these behaviours. To-do List, Calendar, and Main Quests must not return.
 
@@ -36,15 +36,17 @@ The introduction must preserve these behaviours. To-do List, Calendar, and Main 
 Implement the stages defined in `background.md`:
 
 1. Arrival and basic movement.
-2. Envelope inspection and conflicting A/B notes.
+2. Envelope inspection and two conflicting unsigned hands.
 3. Window, leaf, glowing mark, and net pickup.
 4. Accessible no-fail net minigame.
-5. Remaining form moving behind the mirror.
-6. Vague A/B exchange and handoff to the Diary.
+5. The small form moving behind the mirror.
+6. The unitless “Eight” exchange and handoff to the Diary.
 7. Optional first Diary record and visible save response.
-8. One-time presentation of the six-function Room Index.
-9. Quiet, Nudge, or Lead guidance preference.
-10. Return to free exploration.
+8. Sequential Skill Tree, Profile, Achievement Wall, and Life Novel instruction, each linked to its real panel.
+9. Little Crow companion introduction and visual reveal that “Eight” meant its legs.
+10. Final future/past identity reveal.
+11. Both hands decide that the one in the middle will raise the little crow.
+12. Room Index unlock and free exploration.
 
 ### 3.2 Six-function introduction
 
@@ -52,11 +54,11 @@ The MVP must teach the purpose and control boundary of each function without for
 
 | Function | Required teaching point |
 | --- | --- |
-| Diary | Record a dated moment and chosen weather; only explicit Save changes the room |
-| AI Guidance | Conversation supports reflection; saved context is included only with user opt-in; suggestions do not modify records |
+| Diary | Record a dated moment and chosen Mood; only explicit Save changes the room |
+| AI Companion | Little Crow conversation supports brief reflection; same-day history is retained; saved context is included only with user opt-in; suggestions do not modify records |
 | Skill Tree | User creates skills and manually confirms progress; linked Diary entries are evidence only |
 | Achievement Wall | User creates or confirms milestones; importance is never assigned automatically |
-| Hero | Name, pronouns, current theme, and self-reflection are editable present descriptions |
+| Profile | Name, Gender, Motto, and Attributes are editable present descriptions; character art follows Gender |
 | Life Novel | Saved material can produce an editable draft; only user-approved chapters become lasting narrative |
 
 ### 3.3 Guidance behaviour
@@ -92,7 +94,7 @@ The player can change the preference from Help or the Room Index.
 | Net | resting, equipped, sweeping, returned/hidden | Pick up and use with keyboard or pointer |
 | Flying shapes | distant, approach, caught, released | Three escalating no-fail targets |
 | Mirror | normal, scratch, note visible | Inspect after the remaining form disappears behind it |
-| Remaining form | distant silhouette, idle, floor movement, hidden, hint actions | Never named; persists after onboarding as local guidance actor |
+| Little crow | distant silhouette, hidden extra legs, full eight-legged portrait, hint actions | Named during the companion stage; persists as the optional AI companion |
 
 ### Net minigame
 
@@ -112,14 +114,14 @@ The player can change the preference from Help or the Room Index.
 - Offer neutral wording: write a real moment, use a practice sentence, or continue without writing.
 - Do not create a permanent sample entry automatically.
 - A draft must not change lighting or onboarding completion.
-- A successful save must show the source date and weather in text as well as visual light.
+- A successful save must show the source date and Mood in text as well as visual light.
 - Continuing without a save keeps neutral/current committed lighting and explains the save effect.
 
 ### Completion and replay
 
-- Mark onboarding complete after the Room Index explanation and guidance preference, whether or not a Diary was saved.
-- Returning users enter free exploration; Help contains **Replay introduction** and **Review room functions**.
-- Provide **Skip introduction** from the beginning. Skipping opens the six-function summary and then free exploration.
+- Mark onboarding complete only after the function instructions, temporal reveal, and decision to leave the little crow with the one in the middle.
+- Returning users enter free exploration; Help contains **Reset introduction** and **Review room functions**.
+- Provide **Skip introduction** from the beginning. Skipping enters free exploration without changing any personal records.
 - Resetting onboarding must not reset Diary, Hero, Skill, Achievement, Guide, Chapter, or atmosphere data.
 
 ## 5. Data additions
@@ -130,7 +132,7 @@ Add a small persisted onboarding record, either inside the game store or under a
 interface OnboardingState {
   version: 1;
   status: "not-started" | "in-progress" | "complete";
-  step: "arrival" | "envelope" | "window" | "net" | "mirror" | "diary" | "index" | "complete";
+  step: "arrival" | "envelope" | "window" | "net" | "mirror" | "diary" | "skills" | "profile" | "achievements" | "novel" | "companion" | "reveal" | "adoption" | "complete";
   guidanceMode: "quiet" | "nudge" | "lead";
   completedAt: string | null;
 }
@@ -139,8 +141,8 @@ interface OnboardingState {
 Requirements:
 
 - Never store which writer the user appeared to trust as a psychological profile.
-- Do not send onboarding choices, note interactions, or net performance to the Mirror API.
-- Preserve existing `life-as-a-room-game-v1` records during migration.
+- Do not send onboarding choices, note interactions, or net performance to the Little Crow API.
+- Preserve all existing personal records, onboarding progress, and temporary drafts through a versioned, non-destructive migration into the `life-room-*` namespace.
 - Keep temporary Diary drafts under the existing game-specific draft namespace.
 - Narrative progress and guidance mode must work offline.
 
@@ -152,7 +154,7 @@ Keep the current warm isometric room. Suspense comes from impossible timing, emp
 
 - Preserve the existing camera, furniture positions, and dominant mauve/gold palette.
 - Use cool silver-violet light for cross-time traces and warm paper/gold for readable interaction cues.
-- A's handwriting is rounded and flowing; B's is narrow, angular, and heavily corrected.
+- The future hand is rounded and flowing; the past hand is narrow, angular, and heavily corrected. Player-facing notes have no names, initials, or signatures.
 - Identify A/B with shape marks as well as handwriting and colour so the distinction survives transcription and colour-vision differences.
 - Avoid blood, police tape, weapons, visible bodies, occult clichés, and explicit crime imagery.
 - The remaining form should be ugly-cute only on close inspection. At a distance its outline must remain ambiguous.
@@ -166,7 +168,7 @@ Keep the current warm isometric room. Suspense comes from impossible timing, emp
 | --- | --- | --- |
 | `public/room/dream-room.png` | 1536 × 1024 room background | Preserve as the only environment; place onboarding art as aligned transparent overlays |
 | Procedural Hero | Player character | Reuse without redesign |
-| Procedural ambient/window/lamp light | Weather response | Reuse; add restrained cross-time glow values |
+| Procedural ambient/window/lamp light | Mood response | Reuse; add restrained cross-time glow values |
 | Procedural bookshelf markers and particles | Saved-memory feedback | Reuse for first-record payoff |
 | Lucide interface icons | Six function panels and controls | Reuse in Room Index and accessible prompts |
 
@@ -215,7 +217,7 @@ No voice acting is required for MVP. Silence between note sounds is part of the 
 - Real-time mirror reflection.
 - A separate boss/monster design.
 - Detailed creature customization or cosmetics.
-- More than the current seven weather-light presets.
+- More than the current five Mood-light presets.
 
 ## 8. UI and accessibility
 
@@ -223,7 +225,7 @@ No voice acting is required for MVP. Silence between note sounds is part of the 
 - Never encode A/B identity only through colour or handwriting; add distinct author marks and text labels in transcription.
 - Notes, net actions, guidance choice, Skip, and Replay must be keyboard and pointer accessible.
 - Respect `prefers-reduced-motion`; disable rapid flocking, pulses, particles, and screen shake.
-- Do not use flashing light. Stormy weather remains steady.
+- Do not use flashing light. Stressed Mood lighting remains steady.
 - Keep the existing direct Room Index so spatial navigation is never mandatory.
 - Preserve explicit local-storage and AI-context explanations outside the fiction. Mystery must not obscure consent or data behaviour.
 - The introduction must not describe the user as guilty, damaged, chosen, trapped, or under surveillance as fact.
@@ -240,7 +242,7 @@ No voice acting is required for MVP. Silence between note sounds is part of the 
 | New note/dialogue component | Render authored paper, clean transcription, focus trapping, and step advancement |
 | New onboarding domain module | Define state transitions independently of rendering for focused tests |
 
-The onboarding must not depend on `/api/guide`. The existing Mirror AI remains optional and server-mediated.
+The onboarding must not depend on `/api/guide`. The Little Crow AI remains optional and server-mediated.
 
 ## 10. Recommended implementation order
 
@@ -261,7 +263,7 @@ The onboarding must not depend on `/api/guide`. The existing Mirror AI remains o
 5. The net sequence has no score, punishment, hard failure, or mandatory fast motion.
 6. A player can finish the introduction without providing personal writing.
 7. An unsaved Diary draft causes no room change.
-8. A successful Diary save closes the panel, changes lighting from the recorded weather, marks the bookshelf, and shows the source date.
+8. A successful Diary save closes the panel, changes lighting from the recorded Mood, marks the bookshelf, and shows the source date.
 9. All six retained functions receive a clear purpose and user-control explanation.
 10. No removed To-do, Calendar, or Main Quest function appears.
 11. Quiet, Nudge, and Lead work locally and can be changed later.

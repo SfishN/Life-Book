@@ -1,4 +1,4 @@
-export const ONBOARDING_STORAGE_KEY = "life-as-a-room-game-onboarding-v1";
+export const ONBOARDING_STORAGE_KEY = "life-room-onboarding-v1";
 
 export type OnboardingStep =
   | "arrival"
@@ -7,7 +7,13 @@ export type OnboardingStep =
   | "net"
   | "mirror"
   | "diary"
-  | "index"
+  | "skills"
+  | "profile"
+  | "achievements"
+  | "novel"
+  | "companion"
+  | "reveal"
+  | "adoption"
   | "complete";
 
 export type GuidanceMode = "quiet" | "nudge" | "lead";
@@ -35,7 +41,13 @@ const STEPS = new Set<OnboardingStep>([
   "net",
   "mirror",
   "diary",
-  "index",
+  "skills",
+  "profile",
+  "achievements",
+  "novel",
+  "companion",
+  "reveal",
+  "adoption",
   "complete",
 ]);
 const MODES = new Set<GuidanceMode>(["quiet", "nudge", "lead"]);

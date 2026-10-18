@@ -1,6 +1,6 @@
-# Life as a Room — Game Version
+# Life Room — Game Version
 
-A local, diary-led version of Life as a Room. Save a diary and the weather you record changes the room's light. The background story and puzzle introduction are intentionally undecided.
+A local, diary-led version of Life Room. Save a diary and the Mood you record changes the room's light. The background story and puzzle introduction are intentionally undecided.
 
 **Current requirements:** [PRD_g.md](PRD_g.md)
 
@@ -22,8 +22,8 @@ This folder was copied from the current room-version, including existing local c
 
 ## Six retained functions
 
-- Diary: create, date, read, and explicitly edit entries; optional weather and skill association.
-- AI Guidance: a Mirror companion, with opt-in saved-record context and a labeled local fallback.
+- Diary: create, date, read, and explicitly edit entries; choose one Mood and optionally associate Skills.
+- AI Companion: the Little Crow, with a large current-reply bubble, one-day history, opt-in saved-record context, and a labeled local fallback.
 - Skill Tree: skills, user-confirmed progress, and linked diary evidence.
 - Achievement Wall: create and confirm meaningful milestones.
 - Hero: identity, current theme, and self-reflection.
@@ -34,13 +34,13 @@ To-do List, Calendar, and Main Quests are removed from the active game. Their fu
 ## Try the save-to-room loop
 
 1. Enter the room and open Diary.
-2. Write a moment and choose Sunny, Cloudy, Rainy, Snowy, Foggy, Stormy, or Not recorded.
+2. Write a moment and choose Calm, Happy, Neutral, Tired, or Stressed.
 3. Nothing in the room changes while the entry is a draft.
 4. Select **Save diary & see room**: the panel closes, lighting changes, and the bookshelf responds.
 5. Edit an entry with **Edit entry** and commit with **Save changes & see room**.
 6. Reload: the last saved atmosphere and its source date remain.
 
-The most recently saved entry controls lighting, even for an older diary date. No weather service, location permission, or emotion inference is used. Stormy light never flashes.
+The most recently saved entry controls lighting, even for an older diary date. Mood is always chosen by the user: it is never inferred, scored, or fetched from an external service. Stressed light remains steady and never flashes.
 
 ## Controls
 
@@ -53,9 +53,9 @@ The most recently saved entry controls lighting, even for an older diary date. N
 
 ## Local data and AI
 
-The game uses separate keys (`life-as-a-room-game-v1` and `life-as-a-room-game-draft:`) and a separate PWA cache. The original app's browser records are not copied or changed. Unsaved fields are temporary seven-day drafts. Records are browser-local, not cloud-backed up.
+Life Room uses a `life-room-*` namespace for new data. Previous production keys remain migration inputs until saved records, onboarding progress, atmosphere, and temporary drafts have been copied and verified. Unsaved fields are temporary seven-day drafts. Records are browser-local, not cloud-backed up.
 
-Optional Mirror AI uses the copied server-side configuration: set `OPENAI_API_KEY` in this folder's `.env.local` to enable it. Without a key, a local observer replies. Saved diary/profile/growth context is opt-in; messages and recent conversation are used when you speak.
+Optional Little Crow AI uses the copied server-side configuration: set `OPENAI_API_KEY` in this folder's `.env.local` to enable it. Without a key, a local observer replies. Saved diary/profile/growth context is opt-in; only the current day's conversation is retained and used when you speak.
 
 Life Novel generation remains the inherited editable **local template**, not model-generated chapters. Skill progress and achievements remain user-controlled.
 

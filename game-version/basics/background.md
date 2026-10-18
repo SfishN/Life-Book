@@ -1,341 +1,530 @@
-# Life as a Room — Background and Opening Guidance
+# Life Room — Background and Opening Guidance
 
-Version: g0.2  
-Date: 2026-09-12  
-Status: Narrative foundation for `game-version`  
-Scope: The opening of the guidance story, not the complete story
+Version: g0.3  
+Date: 2026-10-18  
+Status: Approved narrative baseline for `game-version`  
+Scope: Complete opening guidance inside the room
 
 ## 1. Narrative purpose
 
-The opening is a false-crime mystery contained inside one room. The player should suspect that a serious event, forbidden exchange, disappearance, or old offence connects the handwritten messages. The game does not confirm which interpretation is correct.
+The opening presents the room as the site of a serious hidden incident. Two incompatible hands leave warnings, instructions, and fragments of an argument for an unknown person who exists somewhere between their times. The apparent danger is eventually reduced to an absurd dispute about a strange little crow, but the room and its temporal connection remain real.
 
-The author-only truth is less terrible: A and B are using the room to stage an elaborate joke for the unknown person in the present. Their performance is real enough to produce one unplanned consequence, but the MVP does not reveal the joke, their identities, or the consequence's meaning.
+The two writers do not know a “player.” To them, the current occupant is only **the one in the middle**: an unknown person living after one writer and before the other.
 
-The introduction must accomplish four things:
+The opening must:
 
-1. Teach movement, object interaction, and the Room Index.
-2. Demonstrate the primary loop: record a moment, explicitly save it, and see the room respond.
-3. Introduce all six self-management functions without requiring the player to complete all six.
-4. End with more questions than answers and begin the long-term customized guidance relationship.
+1. Teach movement and object interaction.
+2. Introduce Diary and Mood through a real save-and-response loop.
+3. Introduce Skill Tree, Skill Record, Profile, Achievement Wall, Life Novel, and the Little Crow companion.
+4. Preserve user control over saving, interpretation, AI context, achievements, and approved narrative.
+5. Reveal the writers' positions in time only after every function has been introduced.
+6. End with both writers deciding that the one in the middle will raise the little crow.
 
 ## 2. Author-only background
 
 ### 2.1 Three positions in time
 
-- **B is in the past.** B knows how the room was found and what was placed there first, but cannot directly observe the present player.
-- **The user is in the present.** The user can move objects, choose what to record, and deliberately save a version of events.
-- **A is in the future.** A can find traces left by the user and knows some consequences, but does not reliably know how or why they occurred.
+- **The sharp hand is in the past.** He knows how events began but cannot see their final consequences.
+- **The one in the middle is in the present.** This person can act in the room, preserve records, and choose what those records mean.
+- **The rounded hand is in the future.** He has seen later outcomes but does not always know how they began.
 
-They occupy different temporal versions of the same physical room. No person enters another person's time during the opening.
+All three occupy different temporal states of the same physical room. Their bodies cannot cross. Writing, small objects, light, sound, and changes to persistent surfaces can.
 
-The room exposes traces in a non-linear order. Paper, leaves, glass, reflected light, and deliberate records can appear across its three states. A reply may therefore become visible before the message that caused it. This makes the exchange look like evidence from a large hidden case without requiring a literal crime.
+The rounded and sharp hands know one another through years of displaced notes. They are familiar, competitive, and fond of each other in a way neither would state directly. Their disagreements should sound dangerous before they become funny.
 
-### 2.2 Rules of the room
+### 2.2 The little crow
 
-1. **Bodies do not cross.** A, B, and the user cannot see or touch one another directly.
-2. **Traces can cross.** Writing, small objects, sounds, shadows, and changes to persistent surfaces may appear in another time.
-3. **The present can seal a record.** A saved record made by the user anchors the room's current visible state. Drafts and unconfirmed interpretations do not.
-4. **The room preserves uncertainty.** It can show that something happened without explaining what it means.
-5. **Interpretation belongs to the user.** Neither A, B, the Mirror, nor the room may decide the user's identity, growth, or achievements.
-6. **The anomaly is exceptional.** One small form remains in the user's present after the net sequence. The opening gives it no name or explanation.
+The rounded hand cultivated the little crow in the future. It can fly, scuttle on eight thin legs, notice temporal traces, and carry limited information between versions of the room. It was supposed to return after the net sequence, but it remained in the middle time because it became attached to the current occupant. Until the companion reveal, its extra legs remain folded beneath its feathers or hidden by silhouettes, furniture, and plants.
 
-### 2.3 A and B
+The sharp hand considers it another future-made problem. The rounded hand treats it as an intelligent creature rather than a failed experiment. By the end of the opening, both accept that it cannot be sent back and decide that the one in the middle will raise it.
 
-| Character | Author truth | Writing and behaviour | What the player may infer |
+Afterward, the little crow becomes the in-world form of AI companionship. It may converse, reflect, and use only the records the user explicitly allows it to read. It may never save, edit, approve, pin, or delete records for the user.
+
+### 2.3 Rules of the room
+
+1. Bodies do not cross between times.
+2. Writing and small traces can cross through persistent surfaces and objects.
+3. A deliberate save anchors a record in the present room.
+4. Drafts, suggestions, and interpretations remain provisional until the user confirms them.
+5. Mood changes atmosphere and lighting; it is not a score or diagnosis.
+6. The Mirror preserves displaced writing but is not an AI entrance.
+7. The room may present uncertainty but must never obscure privacy, saving, or consent.
+
+## 3. Function map
+
+| Room object | Function | Narrative role | User control |
 | --- | --- | --- | --- |
-| A | Lives in the future; playful, inventive, careless with details; initiated the performance | Warm, rounded handwriting; short instructions; writes as if the outcome is already known | A may be controlling events, hiding evidence, or leading the user into danger |
-| B | Lives in the past; exact, suspicious in tone, but willingly helps construct the performance | Angular handwriting; corrections, warnings, underlining, crossed-out phrases | B may be a witness, investigator, victim, or equally unreliable accomplice |
-
-A and B know each other only through the room. Over time, their notes became a friendship and then a private game. When they realized that an unknown present occupant would appear, they built a dramatic sequence of contradictory instructions. B performs distrust; A performs confidence. Both expect the player to feel watched.
-
-The prank is not revealed in the MVP. On a first playthrough, even their dry humour should be readable as tension.
-
-### 2.4 The net and the remaining form
-
-The flying shapes are not ordinary animals. They are brief folds of light and discarded moments moving between versions of the room. The net temporarily gives them a stable outline.
-
-A tried to draw several crossings through the room at once. When B asks, “How many did you take?”, A cannot give a reliable answer and says “Eight.” The number may refer to attempts, crossings, shapes, or something else. The visual design quietly echoes the number, but the dialogue never explains it.
-
-After the flock leaves, one small, awkward shape remains and moves behind the mirror. It should be visible enough to provoke curiosity but never presented with a name, species, biography, or tutorial label. It becomes the physical carrier of customized guidance after the opening because it can notice the user and leave hints inside the present. The player learns this through behaviour over time, not exposition.
-
-## 3. Why self-management belongs in this story
-
-The six functions are six levels of authorship. They must remain distinct so the system never turns an observation into a judgment without the user's choice.
-
-| Room object | Function | Narrative meaning | User control |
-| --- | --- | --- | --- |
-| Bookshelf | Diary | What happened, when it happened, and the weather the user observed | Only an explicit save creates a lasting record and changes the room light |
-| Plant | Skill Tree | A capacity the user chooses to cultivate | Diary evidence may be linked, but progress changes only when the user confirms it |
-| Achievement Wall | Achievements | A moment the user decides deserves significance | No ordinary diary entry becomes an achievement automatically |
-| Bed / bedside journal | Hero | The user's current description of self | Name, pronouns, theme, and reflection remain editable rather than fixed identity claims |
-| Mirror | AI Guidance | A place to question and interpret records | The Mirror may suggest; saved context is shared only by opt-in; it cannot alter records |
-| The room as a whole | Life Novel | A possible narrative made from chosen records | Draft text remains editable and becomes lasting only after user approval |
+| Bookshelf | Diary and Mood | Preserve a dated present moment and let its Mood affect the room light | Only Save creates a record and changes the room |
+| Plant | Skill Tree and Skill Record | Cultivate a chosen ability through real practice | Progress comes from saved records, not AI judgment |
+| Bed / bedside label | Profile | Tell the room how to address and represent the current occupant | Name, Gender, Motto, and Attributes remain editable |
+| Achievement Wall | Achievements | Keep moments the user considers meaningful | Manual creation and Pin, Unpin, or Dismiss remain user decisions |
+| The room / books | Life Novel | Arrange selected records into an editable life chapter | Date range, sources, edits, regeneration, and approval remain explicit |
+| Little crow | AI Companion | Offer brief conversation and reflection inside the fiction | Context is opt-in; chat lasts only for the current day |
+| Mirror | Story evidence only | Reveal displaced handwriting and the writers' relationship | It returns to an ordinary mirror after the scene |
 
 The thematic sequence is:
 
-> event → record → possible pattern → chosen meaning → reflection → approved narrative
+> event → record → practice → chosen meaning → reflection → approved narrative
 
-This is not a scoring ladder. The user may visit the functions in any order after the introduction, and nothing decays when they leave.
+This is not a scoring ladder. Nothing decays because the user leaves, skips a feature, or records a difficult Mood.
 
-## 4. Player knowledge policy
+## 4. Player-facing writing rule
 
-### The opening may establish
+The opening never displays speaker names, initials, or letter labels. The player distinguishes the writers through typography:
 
-- Two distinct hands are writing in or through the room.
-- The hands disagree, but their disagreement may be staged or incomplete.
-- The notes do not arrive in a trustworthy order.
-- Saving a present record visibly affects the room.
-- The room contains six ways to record or interpret a life.
-- Something small stayed when everything else left.
+- warm, rounded handwriting for the future writer;
+- narrow, angular handwriting for the past writer.
 
-### The player may suspect
+Speaker descriptions in this document are production directions only and do not appear in the game.
 
-- A missing person, concealed experiment, theft, cover-up, mythic ritual, or impossible investigation.
-- One writer is helping while the other is obstructing.
-- “Eight” is a count connected to the hidden incident.
-- The room itself may be selecting evidence.
+## 5. Complete opening guidance script
 
-### The opening must not reveal
+Target duration: 10–12 minutes. Everything happens inside the existing room.
 
-- That A is in the future, B is in the past, and the user occupies the present.
-- That A and B cooperated on the frightening welcome.
-- That the apparent case is primarily a joke.
-- What the flying shapes are.
-- What the remaining form is or why it can stay.
-- The full history, final conflict, or later resolution of the guidance story.
+### 5.1 Arrival
 
-The words **future**, **past**, **timeline**, **prank**, **experiment**, **pet**, and **guide** should not appear in A/B's opening notes. Clear system labels may still identify the six product functions for usability.
+The room appears in muted light. A clock gives one backward tick. Paper moves on the desk although the curtains are still.
 
-## 5. Opening guidance script
-
-Target duration: 8–12 minutes. Everything occurs inside the existing room.
-
-### Stage 0 — Arrival
-
-The room appears in muted, neutral light. The player stands near its centre. A clock gives one backward tick. Paper moves on the desk although the curtains are still.
-
-**Player:**
+The current occupant says:
 
 > Where am I?
 
-There is no answer. A sealed envelope on the desk begins to glow faintly.
+There is no answer. An envelope on the desk begins to glow.
 
-The game displays only the controls needed now:
+Only the controls needed at this moment are shown:
 
 > Move — WASD or Arrow Keys  
 > Interact — E, click, or tap
 
-If the player waits, the envelope shifts once. Nothing speaks.
-
-### Stage 1 — The envelope
+### 5.2 The envelope
 
 The front reads:
 
 > FOR THE ONE IN THE MIDDLE
 
-Inside, in A's hand:
+Inside, in rounded handwriting:
 
 > Go to the window.  
 > Bring the net.  
-> Do not answer anything that knocks.  
-> —A
+> Do not answer anything that knocks.
 
-Written across the lower edge in B's hand:
+Across the lower edge, in sharp handwriting:
 
 > Do not go to the window.  
 > Do not trust the other hand.  
-> If you already moved the net, put it back.  
-> —B
+> If you already moved the net, put it back.
 
-The player may explore or approach the window. The route must converge without declaring either hand correct.
+There are no signatures or letter labels on the envelope.
 
-If the player waits, a new line becomes visible on the back of the paper:
+If the player waits, a new rounded line becomes visible on the back:
 
-> Waiting will not keep it from the glass.  
-> —A
+> Waiting will not keep it from the glass.
 
-### Stage 2 — The window and net
+### 5.3 The window and net
 
-A thin glowing mark appears on the window. It resembles a sign, seal, or incomplete letter; it is never translated.
+A thin glowing mark appears on the window. It resembles a seal or incomplete letter and is never translated.
 
-A leaf rests against the inside of the glass. In B's hand:
+A leaf rests against the glass. In sharp handwriting:
 
 > You trusted him.  
 > He has the ending. That does not mean he knows how it began.
 
-A tag is tied to a small hand net near the desk/window area:
+A tag is tied to the net:
 
 > When the light breaks, catch what crosses.  
-> Do not count aloud.  
-> —A
+> Do not count aloud.
 
-The user equips the net. The interaction prompt changes to:
+The player equips the net. The glowing mark fractures into moving points that resemble birds as they cross the room.
 
-> Move — WASD or Arrow Keys  
-> Sweep net — E, click, or tap
-
-### Stage 3 — Net sequence
-
-The glowing mark fractures into moving points. They take the distant shape of birds as they cross the room.
-
-The player catches three required targets:
+The player catches three guided targets:
 
 1. A slow target teaches positioning.
 2. A turning target teaches timing.
 3. A small flock creates controlled confusion.
 
-Missed targets circle back. There is no score, damage, punishment, or failure state. After a generous timeout, the next target slows so every player can continue.
+Missed targets circle back. There is no score, damage, punishment, or failure state.
 
-When the sequence ends, the caught shapes rise out of the net and pass through the window. One small, uneven shape remains. Its silhouette is difficult to read. It looks at the player, crosses the floor in an awkward mixture of hopping and scuttling, and disappears behind the standing mirror.
+When the sequence ends, the caught shapes fly through the window. One small, uneven shape remains. It crosses the floor in a mixture of hopping and scuttling, then disappears behind the mirror.
 
-No text identifies it.
+### 5.4 Writing behind the mirror
 
-### Stage 4 — Behind the mirror
+Scratching comes from behind the mirror. The player moves it and finds two old notes pressed against its back.
 
-The player approaches the mirror and interacts. Marks on its backing become readable.
-
-**B:**
+Sharp handwriting:
 
 > How many did you take?
 
-**A:**
+Rounded handwriting:
 
 > I'm not sure. Eight?
 
-**B:**
+Sharp handwriting:
 
 > You do not know?
 
-**A:**
+Rounded handwriting:
 
 > Not from here.
 
-**B:**
+Sharp handwriting:
 
 > Then why is one still in the room?
 
-There is no answer. A faint scratch comes from behind the mirror, then stops.
+“Eight” has no unit. It may sound like a number of people, missing persons, objects, or experiment records. At this point, the player cannot know what the writers counted.
 
-Another exchange appears lower down:
+The small thing moves again behind the mirror but does not fully reveal itself. The mirror then returns to an ordinary state. It does not become an AI entrance and has no oval interaction panel.
 
-**A:**
+### 5.5 Diary and Mood
 
-> The room will ask for a record.
+The little crow takes a blank piece of paper and flies to the bookshelf.
 
-**B:**
+Rounded handwriting:
 
-> Write only what happened.
+> Write down one thing that happened today.  
+> The room needs to know what belongs to now.
 
-**A:**
+Sharp handwriting:
 
-> And what the sky looked like.
+> Leave only what you are willing to keep.  
+> You choose the light as well.
 
-**B:**
+The Diary opens at the bookshelf. The player learns to:
 
-> Save it before you believe what changes.
+1. choose a date;
+2. choose a Mood;
+3. add a title and write a moment;
+4. optionally link a Skill;
+5. explicitly Save the entry.
 
-The bookshelf receives a restrained highlight. This hands the player to the real self-management loop without explaining the mystery.
+Before Save, the room does not change. After Save:
 
-### Stage 5 — First record
+- the Diary is stored locally;
+- its Mood changes the room lighting;
+- a new visible book appears on the shelf;
+- the book can reopen the saved entry.
 
-At the bookshelf, the Diary opens with the existing fields:
+The player may use a neutral practice sentence or close the Diary without sharing a personal moment.
 
-- optional title;
-- required description of a moment;
-- date;
-- user-observed weather;
-- optional related skill.
+Rounded handwriting:
 
-The player may write a real recent moment, write a neutral practice line such as “I entered the room,” or continue without creating a personal record. The interface must not pressure disclosure.
+> I knew the shelf would end up like this.
 
-Before saving, the room remains unchanged. On **Save diary & see room**:
+Sharp handwriting:
 
-1. The entry is stored locally.
-2. The panel closes.
-3. The recorded weather changes the room's light.
-4. A visible marker appears on the bookshelf.
-5. The source date is shown in text.
+> You are talking about a result that has not finished happening again.
 
-After the change, two final lines appear on the envelope:
+This is the second clue that the rounded hand has seen later outcomes.
 
-**A:**
+### 5.6 Skill Record and Skill Tree
 
-> Now you know the first rule: what you save becomes visible.
+The changed light reaches the plant. The little crow lands on one of its leaves.
 
-**B:**
+Rounded handwriting:
 
-> Visible is not the same as true.
+> Do it a few more times and it becomes a habit later.
 
-If the player continues without saving, the neutral light remains and the UI explains what an explicit save would do. The story may continue without a personal entry.
+Sharp handwriting:
 
-### Stage 6 — Six places in the room
+> Do not pass off the ending as the process.  
+> Leave a practice record first.
 
-The Room Index opens once as an accessible map. A subtle moving shadow or brief trail points toward each matching object, but the remaining form is still not named.
+The player learns that:
 
-The player-facing descriptions are direct even though A/B's notes remain vague:
+- a Skill is an ability the user chooses to cultivate;
+- a Skill Record represents one real practice session;
+- a record may contain its date, activity, duration, and feeling or difficulty;
+- a Diary may be linked as supporting evidence;
+- plant progress comes from saved Skill Records, not AI judgment;
+- **Why this progress?** reveals the records behind the progress value.
 
-| Place | Clear introduction copy |
-| --- | --- |
-| Bookshelf — Diary | Record a dated moment and its weather. Only Save changes the room. |
-| Mirror — AI Guidance | Reflect through conversation. You choose whether saved room context is included. |
-| Plant — Skill Tree | Name a capacity and confirm its growth yourself. Diary entries may serve as evidence. |
-| Bed — Hero | Edit how you describe yourself now. This description is not permanent. |
-| Achievement Wall | Keep milestones that you decide are meaningful. |
-| Room — Life Novel | Draft a narrative from saved material, edit it, and approve only what feels true. |
+Saving the demonstration record adds a small leaf or visible growth to the plant. AI may later suggest a growth plan, but it cannot create records or alter progress.
 
-The player does not need to open every panel. The introduction is complete when the six locations have been presented and the player can reopen the Room Index at will.
+### 5.7 Profile
 
-### Stage 7 — Beginning of customized guidance
+The little crow drags a blank label from beside the bed.
 
-The interface asks one non-fictional preference question:
+Rounded handwriting:
 
-> How closely should the room point the way?
+> At least tell the room what to call you now.
 
-- **Quiet:** Show guidance only when requested.
-- **Nudge:** Offer a small environmental hint after hesitation.
-- **Lead:** Show a clear route and the next available interaction.
+Sharp handwriting:
 
-The selection controls the remaining form's later behaviour, but the interface does not call attention to that relationship. The preference can be changed at any time.
+> Write the name lightly.  
+> The room keeps things longer than people do.
 
-The opening ends with a new line on the mirror:
+The player is introduced to:
 
-**A:**
+- Name;
+- Gender;
+- Motto;
+- Attributes;
+- later editing of every field.
 
-> If you find the missing page, do not let B read it.
+Character appearance follows Gender automatically. Male uses the boy appearance. Female, Non-binary, and Prefer not to say use the girl appearance. There is no second appearance selector.
 
-Directly underneath, already present:
+Attributes describe directions the user wants to observe; they are not permanent identity claims or scores.
 
-**B:**
+### 5.8 Achievement Wall
 
-> He knows I can read that.
+The little crow drags a record toward an empty frame.
 
-The room returns to free exploration. This is the beginning of the guidance story, not its resolution.
+Rounded handwriting:
+
+> This wall will be full later.
+
+Sharp handwriting:
+
+> If the person living now chooses to pin anything to it.
+
+The player learns that:
+
+- an Achievement can be created manually;
+- AI may offer a suggestion based on allowed records;
+- Pin, Unpin, and Dismiss are explicit user decisions;
+- the wall never decides automatically what deserves to be remembered.
+
+“This wall will be full later” continues to suggest that the rounded hand has seen the future result.
+
+### 5.9 Life Novel
+
+Several records appear in the centre of the room in the wrong order.
+
+Rounded handwriting:
+
+> Put them together. I remember this chapter being rather good.
+
+Sharp handwriting:
+
+> You remember it. That does not mean the one in the middle has to write it that way.
+
+The player learns to:
+
+1. select a Diary date range;
+2. inspect the Diary entries within that range;
+3. choose which entries may be used as sources;
+4. generate an editable Draft;
+5. view the source records;
+6. edit or regenerate the text;
+7. explicitly Approve the final chapter.
+
+An unapproved Draft never becomes a lasting Life Novel chapter. By this point, the player may suspect that the rounded hand has seen their future, but the story does not yet confirm it.
+
+### 5.10 Little Crow companion
+
+The little crow approaches the current occupant. Its companion view opens for the first time. The room behind it is covered by a soft frosted-glass blur.
+
+For the first time, the crow is shown as a complete, unobstructed portrait. It stretches to settle itself in front of the current occupant. Eight thin legs unfold from beneath its feathers and touch the floor one after another.
+
+Sharp handwriting appears beside the portrait:
+
+> There. Eight legs.  
+> That was the number.
+
+Rounded handwriting answers:
+
+> It looks better when it moves.
+
+Sharp handwriting:
+
+> At last, you have supplied a unit.
+
+This is the payoff to the writing behind the mirror: “eight” referred to the little crow's legs, not people, missing persons, captured creatures, or experiment records. The reveal should be visual first and confirmed by the handwriting immediately afterward. It does not yet reveal which writer belongs to the past or future.
+
+The crow's large bubble initially contains:
+
+> …
+
+Rounded handwriting:
+
+> You can ask it one question.  
+> It is good at remembering what it is allowed to know.
+
+Sharp handwriting:
+
+> Let it read only the records you choose.  
+> Its conversation clears after midnight.
+
+The player may type a first message or close the view immediately.
+
+The view communicates its behaviour through layout and character dialogue, never through a system tutorial voice:
+
+- the crow and its current short reply remain on the left;
+- the player's input and today's conversation appear on the right;
+- when a new question is asked, the previous crow reply moves into today's history;
+- only the current day of chat is retained;
+- room records are excluded unless the user actively includes them;
+- replies remain brief;
+- the crow cannot save, edit, approve, pin, or delete records.
+
+The little crow does not explain who wrote the two hands.
+
+### 5.11 Final reveal
+
+After every function has been introduced, new writing appears on the back of the envelope.
+
+Sharp handwriting:
+
+> That is enough. Tell the one in the middle why you always know the result.
+
+Rounded handwriting:
+
+> Are you sure? You insisted we could not tell them before.
+
+Sharp handwriting:
+
+> I insisted that you could not be the one to tell them.
+
+Rounded handwriting:
+
+> Old fossil, those are the same sentence.
+
+Sharp handwriting:
+
+> Perhaps they are, to people from your century.
+
+After a pause, the rounded hand writes:
+
+> Fine. Here is the truth.  
+> By the time I write this, your “today” has been over for a very long time.  
+> I am in your future.
+
+The sharp hand immediately adds:
+
+> When I write this, your “today” has not happened yet.  
+> I am in your past.
+
+Rounded handwriting:
+
+> This room lets our writing fall into the same present.
+
+Sharp handwriting:
+
+> He has been using it to send things backward.
+
+Rounded handwriting:
+
+> Research requires experiments.
+
+Sharp handwriting:
+
+> Research does not usually run around someone else's feet.
+
+Rounded handwriting:
+
+> It simply failed to return as planned.
+
+Sharp handwriting:
+
+> Because “return” was never part of your plan.
+
+### 5.12 Deciding who will raise the little crow
+
+Sharp handwriting:
+
+> Take it back to your time.
+
+Rounded handwriting:
+
+> I cannot. It has already chosen to stay.
+
+Sharp handwriting:
+
+> You raised it.
+
+Rounded handwriting:
+
+> You told the one in the middle to pick up the net.
+
+Sharp handwriting:
+
+> Because you sent it here.
+
+Rounded handwriting:
+
+> Then we are jointly responsible.
+
+Sharp handwriting:
+
+> No.
+
+The little crow walks to the current occupant's feet and sits quietly.
+
+Rounded handwriting:
+
+> It cannot go back, and it has chosen the middle.  
+> Let the one in the middle raise it.
+
+Sharp handwriting:
+
+> You cannot leave an experiment with a stranger.
+
+Rounded handwriting:
+
+> It is not an experiment anymore.
+
+Sharp handwriting:
+
+> Then what is it?
+
+Rounded handwriting:
+
+> Their bird.
+
+There is a long pause. The sharp hand finally answers:
+
+> …Agreed. The one in the middle will raise the little thing.  
+> Do not let it touch the envelope. Do not let it peck the clock.
+
+Rounded handwriting:
+
+> And do not worry too much about what he says.  
+> He thought even the window was too modern.
+
+Sharp handwriting:
+
+> And you raised a bird that cannot find its way home.
+
+Rounded handwriting:
+
+> That is why it needs one.
+
+The little crow's large bubble appears:
+
+> …
+
+The Room Index unlocks and the introduction ends. The little crow now lives in the present room and remains the user's optional AI companion.
 
 ## 6. Guidance rules after the opening
 
-- The remaining form communicates through attention, movement, footprints, carried scraps, and object interaction—not explanatory speech.
-- A/B notes remain short, incomplete, and potentially out of order.
-- Each later narrative beat should introduce or deepen one real function rather than add unrelated puzzle systems.
-- A/B may suggest interpretations but never create, edit, confirm, or delete the user's records.
-- Mystery must never be used to hide privacy behaviour, destructive actions, AI context sharing, or save state.
-- The long-term reveal must be earned gradually. The MVP stops before explaining the temporal structure, the joke, or the remaining form.
+- The little crow may guide through conversation, movement, footprints, carried scraps, and attention to room objects.
+- Its visible replies stay short and in character.
+- It reads saved room context only after explicit user opt-in.
+- The rounded and sharp hands may suggest interpretations but never create, edit, confirm, or delete user records.
+- Every AI-generated chapter, suggestion, or reflection remains distinguishable from a user-authored record.
+- Mystery never hides privacy behaviour, saving, deletion, AI context use, or approval state.
+- The Mirror remains story evidence and decoration, not an AI interface.
+- The Room Index gives direct access to every introduced function after the opening.
 
 ## 7. Tone and writing constraints
 
-- Prefer absence, impossible sequence, redaction, and conflicting instructions over explicit danger.
-- Avoid blood, weapons, screams, named crimes, jump scares, or claims that the player is trapped.
-- Keep each handwritten note to one to four short lines.
-- A sounds certain about consequences but vague about causes.
-- B sounds certain about causes but vague about consequences.
-- Their humour should become obvious only in retrospect.
-- Never punish a player for trusting A, trusting B, distrusting both, moving slowly, or skipping a personal record.
+- Use conflicting knowledge and displaced timing before explicit danger.
+- Avoid blood, weapons, named crimes, jump scares, and claims that the user is trapped.
+- Keep handwritten passages short enough to read as physical notes.
+- The rounded hand sounds certain about consequences and casual about causes.
+- The sharp hand sounds certain about causes and suspicious of consequences.
+- Their mutual familiarity should become clear before their affection does.
+- Never punish the user for trusting either hand, moving slowly, skipping personal disclosure, or declining AI context.
+- In player-facing scenes, never add speaker labels or signatures; typography performs speaker identity.
 
-## 8. Questions deliberately left open
+## 8. Opening outcome
 
-- Who are A and B?
-- Why do their messages arrive in the wrong order?
-- What was “taken,” and why might the answer be eight?
-- Why did one shape remain?
-- What is the missing page?
-- Does the room preserve events, alter them, or merely change how they are seen?
+At the end of the introduction, the user understands:
 
+- how to move and interact inside the room;
+- how Diary, Mood, Skill Records, Profile, Achievements, Life Novel, and the Little Crow companion work;
+- that one writer lives in their past and the other in their future;
+- that the room connects their writing across time;
+- that the strange eight-legged bird was raised by the future writer and became stranded in the present;
+- that both writers have agreed to leave it with the one in the middle to be raised there.
+
+The larger history of the room, the full nature of its temporal mechanism, and the later consequences remain open for future chapters.

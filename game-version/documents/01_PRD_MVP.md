@@ -1,13 +1,13 @@
-# Life as a Room — Product Requirements Document
+# Life Room — Product Requirements Document
 
-**Version:** 0.1
-**Status:** MVP definition
+**Version:** 0.4
+**Status:** Current MVP definition
 **Platform:** Progressive Web App (PWA)
 **MVP presentation:** Fixed-view 2D room
 
 ## 1. Product Summary
 
-**Life as a Room** is a personal life-record and self-management PWA presented as a quiet, interactive dream room. A movable character represents the user. By approaching or selecting furniture, the user opens practical tools such as tasks, goals, a calendar, a success diary, skills, achievements, AI guidance, and a personal life novel.
+**Life Room** is a personal life-record and self-management PWA presented as a quiet, interactive dream room. A movable character represents the user. By approaching or selecting room objects, the user opens practical tools for diary writing, skill records, achievements, an AI companion, personal attributes, and a personal life novel.
 
 The room is not a game world. It is a visual record of the user's life. Actions, reflections, skills, and milestones gradually give the room more meaning.
 
@@ -26,7 +26,7 @@ The project also investigates how people record, understand, and improve themsel
 
 ## 3. Non-Goals
 
-- Life as a Room is not a role-playing game, life simulator, or virtual-pet game.
+- Life Room is not a role-playing game, life simulator, or virtual-pet game.
 - There is no combat, health, energy bar, stamina, action-point system, or movement cost.
 - The user is never punished for inactivity or missed tasks.
 - Character movement is not limited by points, timers, or daily allowances.
@@ -62,13 +62,10 @@ Because a browser may prevent a PWA from closing its own window, `Esc` must clos
 | Room element | Product function | Purpose |
 | --- | --- | --- |
 | **Room** | **Life Novel / Home** | The main interface and the cumulative visual record of the user's life. Opens the Life Novel overview and its chapters. |
-| **Bookshelf** | **Success Diary** | Records completed actions, small victories, reflections, and meaningful moments. |
-| **Vision board** | **Main Quest** | Shows the user's most important long-term goals and their progress. |
-| **Desk** | **To-do List** | Creates, organizes, schedules, completes, postpones, or archives practical actions. |
-| **Mirror** | **AI Guidance** | A storybook-inspired talking mirror through which the dream's AI friend and observer speaks with the user. |
+| **Bookshelf** | **Diary / Skill Record** | Records moods, reflections, meaningful moments, and evidence of skill practice. |
+| **Little Crow** | **AI Companion** | The room's small eight-legged crow listens, replies briefly, and carries the user's current exchange. |
 | **Plant** | **Skill Tree** | Represents skills and learning paths; visible plant growth reflects confirmed progress. |
-| **Bed** | **Character / Hero** | Represents the dreamer and opens the user's identity, avatar, profile, current themes, strengths, and growth summary. |
-| **Calendar** | **Calendar** | Displays events, dated tasks, milestones, and completed records by day. |
+| **Bed** | **Profile** | Represents the dreamer and opens the user's identity, avatar, motto, attributes, and growth summary. |
 | **Achievement wall** | **Achievement Wall** | Displays confirmed milestones, memories, awards, and important life moments. |
 
 The mapping must remain stable so users can build spatial memory.
@@ -80,52 +77,56 @@ The mapping must remain stable so users can build spatial memory.
 - Serve as the Home screen and persistent background for all major functions.
 - Show the character, furniture states, and recent meaningful changes.
 - Provide an entry to Life Novel chapters.
-- Generate periodic chapters from confirmed tasks, diary entries, goals, skills, and achievements.
+- Let the user create a chapter by choosing a diary start date and end date.
+- Show every diary entry found in the selected range and let the user include or exclude individual entries before generation.
+- Save the exact source Diary IDs and source-update timestamps used for each generated chapter.
+- Generate a chapter as a draft first; generation must never approve a chapter automatically.
+- Let the user inspect source entries, edit the generated text, regenerate the same draft, or approve it.
+- Clearly mark Draft and Approved chapters and preserve previously approved chapters.
 - Allow the user to edit, approve, regenerate, or delete AI-generated writing.
 - Never present AI interpretation as fact without user confirmation.
 
 ### 6.2 Bookshelf / Success Diary
 
-- Automatically offer to create an entry when a task is completed.
-- Allow manual recording of victories, reflections, and important moments.
-- Support date, related Main Quest, related skill, tags, and optional media.
+- Provide two tabs: **Write diary** and **Skill record**.
+- Allow manual recording of reflections, ordinary moments, victories, and important experiences.
+- Ask the user to choose one Mood for a Diary entry: Calm, Happy, Neutral, Tired, or Stressed.
+- Treat Mood as the single atmosphere value for the entry. There is no second atmosphere question in the interface.
+- Saving the Diary commits the Mood and updates the room lighting from that Mood in the same operation.
+- Unsaved Mood changes must not affect the room.
+- This MVP starts a fresh Life Room record store; the product owner explicitly approved discarding the current development-only atmosphere records rather than migrating them.
+- Support date, Mood, title, body, and related Skills.
 - Allow entries to become source material for the Life Novel.
-- Allow diary entries to be created, opened, and edited from their corresponding date in the Calendar.
-- Keep Calendar and Bookshelf views synchronized so an edit in either location updates the same diary record.
+- Show recent Diary and Skill records and allow the original record to be opened and edited without duplication.
 
 ### 6.3 Vision Board / Main Quest
 
-- Create and edit long-term goals.
-- Keep the number of active Main Quests intentionally small; the recommended maximum is three.
-- Connect tasks, calendar milestones, skills, and diary entries to a Main Quest.
-- Show progress through evidence and completed actions, not pressure or punishment.
+Main Quest is deferred and is not part of the current six-function MVP. The vision board may remain decorative and must not imply that an unavailable feature can be opened.
 
 ### 6.4 Desk / To-do List
 
-- Create, edit, schedule, complete, postpone, and archive tasks.
-- Connect a task to a Main Quest, skill, or calendar date.
-- Provide a low-friction quick-add action.
-- Turn completed tasks into optional Success Diary entries.
-- Avoid punitive overdue language.
-- Allow tasks to be created, opened, edited, completed, postponed, or archived from the Calendar.
-- Automatically carry an unfinished task from a previous day into the next day's To-do List.
-- Carry forward the same task record rather than creating a duplicate.
-- Preserve the task's original scheduled date and carryover history while showing it in the current day as “Carried forward.”
-- Let the user reschedule, archive, or leave a carried-forward task active without penalty.
+To-do List is deferred and is not part of the current six-function MVP. The desk may remain decorative.
 
-### 6.5 Mirror / AI Guidance
+### 6.5 Little Crow / AI Companion
 
-- Present the AI as a friend and gentle observer within the user's dream.
-- Use a talking-mirror interaction inspired by familiar storybook conventions without copying a specific copyrighted character or visual design.
+- Present the AI through the Little Crow as a friend and gentle observer within the user's dream.
+- Keep the mirror decorative after onboarding; it is not an AI entry point and has no standard click panel.
+- Open a scene-like companion view with the Crow illustration and its current reply in one large speech bubble, not the standard oval furniture panel.
+- Show the user's input and the day's earlier exchanges in a right-side conversation rail. The Crow's large bubble shows only the current reply; when the user asks again, the previous exchange moves into the rail.
+- Begin with `...`, limit every Crow response to 55 words and three sentences, and retain conversation history only for the current local day.
 - Provide conversational guidance, goal clarification, task breakdown, and reflection prompts.
 - Use the user's approved history to provide continuity.
 - Ask more than command and avoid judgmental language.
 - Require confirmation before saving memories, evaluations, or generated plans.
 - Allow the user to inspect, edit, or delete saved AI memories.
+- Keep **Include room records** off by default. Only include saved Profile, Diary, Skill, Achievement, and room-lighting context in the current request when the user explicitly enables it.
 
 ### 6.6 Plant / Skill Tree
 
 - Create, organize, and review skills and learning paths.
+- Let the user save a Skill Record containing date, selected skill, practice description, optional duration, and perceived difficulty.
+- Allow a Skill Record to link to an existing Diary entry without duplicating the Diary text.
+- Derive visible progress such as `3 / 5` from linked, user-saved Skill Records and explain the contributing records through **Why this progress?**.
 - Connect completed tasks and diary evidence to skills.
 - Let AI suggest progress with an explanation.
 - Require user confirmation before AI suggestions change skill progress.
@@ -133,7 +134,10 @@ The mapping must remain stable so users can build spatial memory.
 
 ### 6.7 Bed / Character
 
-- Display and edit the user's name, avatar, and profile.
+- Display and edit the user's name, gender preference, motto, and profile.
+- Derive the room character from Gender instead of offering a separate avatar selector: Male uses the boy character; Female, Non-binary, and Prefer not to say use the girl character.
+- Let the user add and remove personal Attributes and show their user-confirmed levels in a radar chart.
+- AI may suggest Attribute evidence but must not silently change an Attribute level.
 - Establish the user as the dreamer whose life is represented by the room.
 - Summarize current goals, skills, achievements, and recent growth.
 - Represent identity and progress without health, energy, or combat statistics.
@@ -141,22 +145,15 @@ The mapping must remain stable so users can build spatial memory.
 
 ### 6.8 Calendar
 
-- Provide month and day views in the MVP.
-- Create, edit, and remove events.
-- Display dated tasks, Main Quest milestones, and completed actions.
-- Link calendar items back to their related records.
-- Allow the user to add and edit a free-form annotation for each date.
-- Show unfinished tasks carried forward from previous days without duplicating the underlying task.
-- Allow To-do List tasks to be created, opened, edited, completed, postponed, and archived from the selected date.
-- Allow Success Diary entries to be created, opened, and edited from the selected date.
-- Provide a clearly labeled link from each day view to the complete To-do List at the Desk.
-- Synchronize Calendar edits immediately with the Desk and Bookshelf panels.
+Calendar is deferred and is not part of the current six-function MVP. Diary and Skill Record dates remain available inside their own panels.
 
 ### 6.9 Achievement Wall
 
 - Display meaningful confirmed milestones rather than repetitive badges.
 - Allow achievements to be created manually or suggested by AI.
 - Require user confirmation for AI-suggested achievements.
+- Separate **Pinned** achievements from **AI suggestions**.
+- Let the user Pin, Unpin, or Dismiss a suggestion while preserving its source link and avoiding repeated dismissed suggestions.
 - Let achievements become Life Novel source material.
 
 ## 7. Overlay Interface Requirements
@@ -165,6 +162,7 @@ The mapping must remain stable so users can build spatial memory.
 - Panels must remain smaller than the viewport, with the room visible around their edges.
 - Recommended maximum size is approximately `88vw × 82vh` on desktop and `92vw × 82vh` on mobile.
 - Panels may use background blur, but text contrast must remain accessible.
+- The Little Crow companion is the deliberate exception to the standard panel shell: it uses a full-viewport frosted scene while keeping the room visibly blurred behind it.
 - Long content scrolls inside the panel; the room itself does not scroll underneath it.
 - Opening and closing animations should be brief and support reduced-motion preferences.
 - Every panel must be closable by `Q`, a visible Close control, or tapping outside where appropriate.
@@ -194,19 +192,18 @@ The MVP includes:
 - `Q` to close an active function panel.
 - `Esc` to start the confirmed app-exit flow, with a browser-compatible exit-screen fallback.
 - Original American-cartoon-inspired 2D character, room, furniture, and animation assets.
-- The nine defined room-element interactions.
+- The six defined room-element interactions.
 - Translucent overlay panels for every core function.
-- Local persistence and authenticated cloud synchronization.
+- Browser-local persistence. The current MVP has no account system or cloud synchronization.
 - A complete core record loop:
 
 ```text
-Create task
-→ connect it to a goal or skill
-→ complete it
-→ create or confirm a Success Diary entry
-→ update confirmed skill or goal progress
-→ consider an achievement
-→ add approved material to the Life Novel
+Write a Diary entry or Skill Record
+→ save the chosen Mood and update the room light
+→ review linked Skill evidence
+→ pin a meaningful Achievement when appropriate
+→ choose a Diary date range for Life Novel
+→ generate, review, and approve a chapter
 ```
 
 The MVP should prioritize a clear, reliable record loop over elaborate animation or decoration.
@@ -232,7 +229,7 @@ The long-term interface should feel as though the user is interacting with each 
 | **Desk / To-do List** | Tasks appear as papers, cards, or a notebook arranged on the desk. |
 | **Bookshelf / Success Diary** | Diary entries appear as books and readable open-book pages. |
 | **Vision board / Main Quest** | Goals appear as pinned notes, images, strings, and progress markers on the board. |
-| **Mirror / AI Guidance** | The AI friend appears and speaks through the mirror surface. |
+| **Little Crow / AI Companion** | The Crow appears as an illustrated room character with one current speech bubble and a separate one-day conversation rail. |
 | **Plant / Skill Tree** | Skills appear as stems, branches, leaves, flowers, or fruit that respond to confirmed growth. |
 | **Bed / Character** | Character identity appears through a dream journal, quilt, bedside portrait, or dreamlike profile scene. |
 | **Calendar** | Dates, annotations, tasks, and diary links appear as marks and notes on a physical wall calendar. |
@@ -249,7 +246,12 @@ Future customization must not hide, rename, or break the learned relationship be
 - AI receives only the context necessary for the requested function.
 - AI-generated memories, evaluations, achievements, and novel passages require user control.
 - Users can export and delete their data.
-- Core records should remain readable offline; changes made offline should synchronize when connectivity returns.
+- Core records should remain readable offline. Cloud synchronization is future scope and must not be implied until accounts, conflict resolution, deletion, and recovery have been implemented and verified.
+- Current personal records use the `life-room-v1` browser-local namespace; onboarding uses `life-room-onboarding-v1`; temporary drafts use the `life-room-draft:` prefix.
+- The 2026-10-17 development reset is an explicitly approved one-time exception because the previous local records contained no useful user data. No automatic legacy-atmosphere migration is included.
+- After this reset, future schema or namespace changes must preserve stable IDs, timestamps, Diary content, Skill links, confirmed Achievements, Guide messages, Life Novel chapters, onboarding state, and room-lighting state unless the product owner explicitly authorizes another reset.
+- The OpenAI credential must exist only as the server-side `OPENAI_API_KEY` environment variable. It must never be embedded in client JavaScript, committed to Git, stored in localStorage, or returned by an API response.
+- The current MVP remains browser-local: each browser has its own Life Room, and clearing browser data can remove it until export or cloud sync is implemented.
 
 ## 12. Accessibility and Usability
 
@@ -272,17 +274,18 @@ The MVP is successful when:
 - A nearby object can be opened with `E`, and the equivalent control works with touch or mouse.
 - The character responds correctly to `W`, `A`, `S`, and `D`; `Q` closes panels; and `Esc` begins a safe exit flow.
 - Every page remains readable while the room stays visibly present.
-- Calendar changes update the same task and diary records shown at the Desk and Bookshelf.
-- Users can annotate a date and reach the complete To-do List from the Calendar.
-- An unfinished task appears on the next day as a carried-forward task without being duplicated or losing its original date.
-- Users can complete the full task-to-Life-Novel record loop.
+- Users can save a Diary Mood and see the corresponding room light after Save.
+- Users can create a Skill Record and inspect why it contributes to visible Skill progress.
+- Users can pin or dismiss an Achievement suggestion without altering its source record.
+- Users can choose a Diary date range, select exact source entries, generate a Life Novel Draft, inspect its sources, and approve it.
+- Users can complete the full Diary-to-Life-Novel record loop.
 - Returning users can recognize meaningful changes created by their own records.
 - The room feels calm and personal without being mistaken for a game that must be won.
 
-## 14. Product Name Recommendation
+## 14. Official Product Name
 
-**Recommended name:** **Life as a Room**
+**Official name:** **Life Room**
 
-This is more natural in English than “Life as Room” and clearly expresses the central metaphor: a person's life is represented by a room that can be visited, understood, and gradually changed.
+The former working title is retired from product-facing copy. **Life Room** is the name used in the interface, metadata, install manifest, documentation, and future releases. The room remains the central metaphor: a person's life can be visited, understood, and gradually changed through their own records.
 
 **Suggested tagline:** *A room shaped by the life you live.*

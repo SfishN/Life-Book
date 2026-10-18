@@ -1,10 +1,115 @@
 # Iteration Log
 
+## 2026-10-18 — Approved full introduction and API connection check (implemented)
+
+### Objective
+
+Replace the short six-function summary with the approved room-bound instruction sequence, preserve existing user records during introduction resets, and verify the server-only OpenAI connection without exposing the credential.
+
+### Changes
+
+- Implemented the persisted sequence: arrival → unsigned envelope → window/net → unitless “Eight” mirror exchange → Diary → Skill Tree → Profile → Achievement Wall → Life Novel → Little Crow → future/past reveal → joint decision that the one in the middle will raise the crow.
+- Connected each function instruction to its existing real panel and allowed the user to continue without creating personal data.
+- Removed visible A/B initials and signatures; the two writers are distinguished only by rounded and sharp typography.
+- Revealed that “Eight” means the crow's eight legs only when the full AI Companion portrait appears.
+- Replaced the record-deletion action with **Reset introduction**. It resets only onboarding progress and preserves Diary, Profile, Skills, Skill Records, Achievements, companion history, chapters, and Mood lighting.
+- Moved the real API credential out of tracked `.env.example` into ignored `.env.local`; restored the example file to a non-secret placeholder.
+- Centralized the OpenAI client with zero automatic retries and a 12-second timeout so missing credit falls back to the local crow response promptly.
+
+### Evidence
+
+- OpenAI authentication endpoint returned HTTP 200 and the configured model was visible.
+- A minimal Responses API call reached OpenAI and returned HTTP 429 with `insufficient_quota` / `credit_balance_exhausted`, confirming the integration and identifying the expected no-credit limitation.
+- The project's `/api/guide` route returned HTTP 200 in `local` mode with a valid fallback reply.
+- `npm run typecheck` and the automated test suite passed after implementation.
+
+## 2026-10-18 — Little Crow companion transfer (implemented)
+
+### Objective
+
+Move AI companionship from the mirror to the Little Crow without rebuilding the reusable room, record store, or server boundary. Keep the redesigned opening separate until its Chinese narrative draft receives product-owner approval.
+
+### Changes
+
+- Moved the `guide` room hotspot and Room Index label to the Little Crow. The normal mirror hotspot and standard AI panel entry were removed; the current onboarding-only mirror beat remains temporarily until the replacement opening is approved.
+- Replaced the generic furniture modal with a full-viewport frosted companion scene: Crow illustration and one large current-reply bubble on the left, Today history and player input on the right.
+- Added the required `...` initial state. A new question moves the previous Crow reply into the Today rail while the large bubble waits for the new response.
+- Retained only the current local day's companion messages, pruning earlier dates during rehydration, snapshots, and subsequent writes.
+- Kept room-record context opt-in and off by default. The server still owns the model credential and now caps Crow responses at 55 words, three sentences, and 360 characters.
+- Added desktop, tablet, and mobile layout rules while preserving the blurred room behind the interface.
+- Generated concepts in `documents/ui-concepts`: a polished Crow companion concept and a transparent twilight-scenery window candidate.
+- Replaced the runtime window layer with the approved twilight-scenery candidate and bumped the offline cache so installed PWAs receive the new art.
+- Replaced Phaser's broad cursor-key helper with explicit uncaptured WASD/Arrow/E keys, preventing its hidden Space and Shift bindings from blocking companion input. The Crow input also stops keyboard-event propagation as a second boundary.
+- Increased first-run movement from the normal `300` world units per second to `420` during onboarding, keeping regular room navigation controlled after the introduction.
+- Refined the Crow speech bubble into a smaller left-pointing speech card with a clean clipped tail and corrected desktop/tablet/mobile positioning.
+- Bound room-character art to Profile Gender and removed the separate avatar selector: Male uses the boy character; Female, Non-binary, and Prefer not to say use the girl character.
+- Repositioned and enlarged Diary book markers into twelve visible shelf slots, with shadow, border, and spine details so a successful Diary save creates an obvious new book.
+
+### Evidence
+
+- `npm run typecheck`: passed.
+- `npm test`: 28 of 28 tests passed, covering gender-derived character art, visible Diary book markers, one-day conversation pruning, Crow hotspot ownership, companion panel routing, text-input keyboard isolation, faster onboarding movement, mobile controls, storage isolation, and server-only AI boundaries.
+- `npm run build`: production build passed on Next.js 16.3.1 with the updated room asset and companion UI.
+
+### Approval boundary
+
+- Do not replace the current opening or write the proposed version into `basics/background.md` until the product owner approves the Chinese review draft.
+- After approval, store the finalized opening in English and then update the onboarding implementation and mirror behavior together.
+
+## 2026-10-17 - Life Room functional UI and fresh storage baseline (implemented)
+
+### Iteration objective
+
+Adopt **Life Room** as the official product name and implement the new Diary, Skill Record, Profile, Achievement Wall, AI Guidance, Skill Tree, and Life Novel interface concepts on top of the reusable room and onboarding code.
+
+### Decisions
+
+- The official product name is **Life Room**. The former working title is retired from product-facing copy, application metadata, the install manifest, and current documentation.
+- Diary uses one **Mood** value: Calm, Happy, Neutral, Tired, or Stressed. It is the only atmosphere question and changes the room lighting after an explicit Diary save.
+- A Mood change remains a draft until Save. Saving commits the Diary record and matching lighting state together so the written record and visible room cannot diverge.
+- The product owner confirmed that current local records contain no useful data and explicitly approved a one-time reset. No legacy-atmosphere migration or fallback is required for this development baseline.
+- The new personal-record namespace is `life-room-v1`; onboarding uses `life-room-onboarding-v1`; temporary unsaved drafts use `life-room-draft:`. Old development namespaces are no longer read.
+- A Life Novel draft stores the selected date range and exact source Diary references. Generation creates a Draft; only the user can approve it.
+- Skill Records are first-class records linked by ID to a Skill and optionally to an existing Diary. They do not duplicate Diary text.
+
+### Implemented changes
+
+- Rebuilt the six functional overlays in the warm ivory and muted-plum UI direction while preserving the Phaser room, furniture hotspots, character movement, and mystery onboarding.
+- Added Diary date navigation, Mood choices, related Skills, recent records, explicit Save, and Mood-driven light updates.
+- Added a separate Skill Record tab with selected Skill, practice, duration, perceived difficulty, optional Diary link, and saved-record history.
+- Added Life Novel date-range selection, exact Diary-source selection, server generation, editable Draft state, source inspection, regeneration, save, and explicit approval.
+- Added pinned and suggested Achievement states with Pin, Unpin, Dismiss, manual creation, and source references.
+- Added editable Profile fields, user Attributes, levels, and a radar-chart view.
+- Added Skill Tree records, generated growth-plan extension point, record-derived progress, and visible progress evidence.
+- Added AI Guidance quick prompts, chat history, explicit **Include room records** consent, and a server-side request boundary.
+- Added server-only OpenAI extension points at `/api/guide`, `/api/novel`, and `/api/insights`. They read `OPENAI_API_KEY` only on the server and use local fallbacks when it is absent.
+- Updated product-facing metadata and copy to **Life Room** and standardized Diary atmosphere wording as Mood.
+- Updated `01_PRD_MVP.md` to document the fresh storage baseline, Mood lighting, Skill Records, Life Novel source traceability, AI consent, and user-approval boundaries.
+
+### Evidence
+
+- `npm run typecheck`: passed.
+- `npm run lint`: passed with no errors; warnings were corrected before release verification.
+- `npm test`: 22 of 22 tests passed, covering Mood lighting, atomic Diary save, storage isolation, Skill Records, user-controlled chapters and suggestions, onboarding separation, assets, and server-only AI boundaries.
+- `npm run build`: production build passed on Next.js 16.3.1; `/`, `/manifest.webmanifest`, `/api/guide`, `/api/insights`, and `/api/novel` were generated successfully.
+- Manual browser verification on `http://localhost:3001`: verified the updated product name and Mood caption; opened Diary and Skill Record, AI Guidance with local fallback, Profile, Skill Tree, Achievement Wall, and Life Novel; confirmed both compact mobile and 1440 × 900 desktop layout branches. A transient selector-caching error found during testing was corrected before final verification.
+- Added a mobile-only two-circle virtual joystick. Dragging its inner circle sends a normalized continuous movement vector into the existing Phaser movement and collision system; releasing, opening an overlay, or losing pointer capture returns it to center and stops movement.
+- Kept **Life Room** on one line at the 390 × 844 mobile breakpoint, collapsed header actions to labeled icon buttons, and saved the verified preview as `documents/mobile-preview-life-room.jpg`.
+- Added room-scoped two-finger pinch zoom from `1×` to `1.8×` while preserving single-finger tap-to-walk and tap-to-open interactions. The canvas disables browser-native touch gestures so the pinch controls the room camera rather than zooming the page.
+- Verified responsive control visibility: the joystick and touch hint are visible at 390 × 844 and hidden at 1440 × 900.
+
+### Decisions and boundaries
+
+- The old browser records may be deleted once on the current development preview, as explicitly requested. Future records created under `life-room-v1` must be preserved.
+- AI output is always a suggestion or Draft. Attribute levels, Achievement status, Skill evidence, and Life Novel approval remain user actions.
+- No API secret is stored in repository files or sent to the browser. The key pasted in chat is treated as exposed and is not used; a rotated key must be configured through `.env.local` and the deployment environment.
+- Life Room remains browser-local in this MVP. Vercel visitors do not share records with one another and do not need to install anything to use the web version.
+
 ## 2026-09-12 - Mystery introduction rebuild (implemented)
 
 ### Iteration objective
 
-Add the opening guidance story to the current `game-version` without replacing stable work. The rebuild keeps the existing Phaser room, procedural Hero, six furniture functions, Zustand records, Diary save flow, weather lighting, bookshelf feedback, Mirror boundary, and local persistence, then places a replayable first-run sequence around them.
+Add the opening guidance story to the current `game-version` without replacing stable work. The rebuild keeps the existing Phaser room, procedural Hero, six furniture functions, Zustand records, Diary save flow, Mood lighting, bookshelf feedback, Mirror boundary, and local persistence, then places a replayable first-run sequence around them.
 
 ### Hypothesis
 
@@ -176,7 +281,7 @@ This is a plan only. None of the tasks below are implemented yet.
 
 ### Product changes incorporated
 
-- Product name changed to Life as a Room.
+- Product name changed to Life Room.
 - Mirror represents AI Guidance; Bed represents Character/Hero.
 - Calendar can edit tasks and Diary entries and navigate to the complete To-do List.
 - Panels use object-inspired treatments and keep the room visible.

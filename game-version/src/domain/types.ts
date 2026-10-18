@@ -1,40 +1,68 @@
 export type PanelId = "diary" | "guide" | "skills" | "achievements" | "hero" | "novel";
 
-export type Weather = "not-recorded" | "sunny" | "cloudy" | "rainy" | "snowy" | "foggy" | "stormy";
+export type Mood = "calm" | "happy" | "neutral" | "tired" | "stressed";
+export type SkillFeeling = "easy" | "steady" | "challenging";
 
 export interface Skill {
   id: string;
   name: string;
-  progress: number;
-  evidence: string[];
+  color: string;
+  growthPlan: string;
+  targetRecordCount: number;
+  status: "active" | "archived";
+  createdAt: string;
+  updatedAt: string;
 }
+
+export interface SkillRecord {
+  id: string;
+  skillId: string;
+  date: string;
+  practice: string;
+  durationMinutes: number | null;
+  feeling: SkillFeeling;
+  linkedDiaryEntryId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SkillRecordInput = Pick<
+  SkillRecord,
+  "skillId" | "date" | "practice" | "durationMinutes" | "feeling" | "linkedDiaryEntryId"
+>;
 
 export interface DiaryEntry {
   id: string;
   date: string;
   title: string;
   body: string;
-  weather: Weather;
-  skillId?: string;
+  mood: Mood;
+  relatedSkillIds: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type DiaryInput = Pick<DiaryEntry, "date" | "title" | "body" | "weather" | "skillId">;
+export type DiaryInput = Pick<DiaryEntry, "date" | "title" | "body" | "mood" | "relatedSkillIds">;
 
 export interface RoomAtmosphere {
-  weather: Weather;
+  mood: Mood;
   sourceEntryId: string | null;
   sourceDate: string | null;
   revision: number;
 }
 
+export type AchievementStatus = "suggested" | "pinned" | "dismissed";
+
 export interface Achievement {
   id: string;
   title: string;
-  description: string;
+  excerpt: string;
   date: string;
-  confirmed: boolean;
+  sourceType: "diary" | "skill-record" | "manual";
+  sourceId: string | null;
+  status: AchievementStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GuideMessage {
@@ -43,27 +71,57 @@ export interface GuideMessage {
   content: string;
   createdAt: string;
   mode?: "openai" | "local";
+  includedRoomRecords?: boolean;
+}
+
+export interface LifeNovelSourceRef {
+  diaryId: string;
+  diaryUpdatedAtWhenGenerated: string;
 }
 
 export interface LifeNovelChapter {
   id: string;
+  chapterNumber: number;
   title: string;
-  period: string;
   body: string;
-  approved: boolean;
+  startDate: string;
+  endDate: string;
+  sourceRefs: LifeNovelSourceRef[];
+  status: "draft" | "approved";
+  generationMode: "openai" | "local";
+  generatedAt: string;
+  approvedAt: string | null;
   updatedAt: string;
 }
 
+export type ProfileGender = "female" | "male" | "non-binary" | "prefer-not-to-say";
+export type AvatarStyle = "girl" | "boy";
+
 export interface HeroProfile {
   name: string;
-  gender: "female" | "male";
+  gender: ProfileGender;
+  avatarStyle: AvatarStyle;
+  motto: string;
   currentTheme: string;
   reflection: string;
+  updatedAt: string;
+}
+
+export interface UserAttribute {
+  id: string;
+  name: string;
+  color: string;
+  level: number;
+  evidenceSkillRecordIds: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LifeRoomData {
   hero: HeroProfile;
+  attributes: UserAttribute[];
   skills: Skill[];
+  skillRecords: SkillRecord[];
   diary: DiaryEntry[];
   achievements: Achievement[];
   guideMessages: GuideMessage[];

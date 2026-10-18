@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Life Room — Little Crow Companion Concept</title>
+  <style>
+    :root {
+      --ink: #3e3044;
+      --soft-ink: #766878;
+      --plum: #6c506f;
+      --plum-deep: #49364f;
+      --ivory: #fffaf1;
+      --rose: #d3a5aa;
+      --line: rgba(86, 62, 87, 0.17);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #6d5a73;
+    }
+
+    button,
+    input { font: inherit; }
+
+    .room {
+      position: fixed;
+      inset: -18px;
+      background: url("../../public/room/dream-room.png") center / cover no-repeat;
+      filter: saturate(0.86) brightness(0.8);
+      transform: scale(1.035);
+    }
+
+    .frost {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 31% 63%, rgba(245, 193, 166, 0.17), transparent 34%),
+        linear-gradient(115deg, rgba(54, 39, 62, 0.32), rgba(101, 76, 99, 0.19) 54%, rgba(48, 35, 56, 0.46));
+      backdrop-filter: blur(12px) saturate(0.9);
+    }
+
+    .frost::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent 28%, transparent 68%, rgba(28,18,33,0.16));
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 425px;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .topline {
+      position: absolute;
+      z-index: 3;
+      top: 34px;
+      left: 46px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(255, 249, 242, 0.88);
+    }
+
+    .place {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      letter-spacing: 0.04em;
+    }
+
+    .place-mark {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #efc88c;
+      box-shadow: 0 0 18px #ffdca7;
+    }
+
+    .place strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+    }
+
+    .place span {
+      color: rgba(255, 249, 242, 0.52);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .close {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,0.27);
+      border-radius: 50%;
+      background: rgba(52, 38, 59, 0.23);
+      color: #fffaf2;
+      font-size: 1.6rem;
+      font-weight: 200;
+      backdrop-filter: blur(12px);
+    }
+
+    .live {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .live::before {
+      content: "";
+      position: absolute;
+      left: 7%;
+      right: 5%;
+      bottom: 2%;
+      height: 44%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(35, 24, 40, 0.2), transparent 66%);
+      filter: blur(20px);
+    }
+
+    .answer {
+      position: absolute;
+      z-index: 2;
+      top: 19%;
+      left: 13%;
+      width: min(640px, 64vw);
+      min-height: 245px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      padding: 42px 72px 50px;
+      border: 1px solid rgba(255, 255, 255, 0.67);
+      border-radius: 66px 66px 66px 18px;
+      background:
+        linear-gradient(145deg, rgba(255, 252, 248, 0.87), rgba(236, 227, 238, 0.75));
+      box-shadow:
+        0 28px 80px rgba(37, 24, 43, 0.23),
+        inset 0 1px 0 rgba(255,255,255,0.86),
+        inset 0 -24px 60px rgba(127, 97, 131, 0.06);
+      backdrop-filter: blur(27px) saturate(1.15);
+      text-align: center;
+    }
+
+    .answer::after {
+      content: "";
+      position: absolute;
+      left: 54px;
+      bottom: -34px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, rgba(242, 234, 242, 0.83) 0 48%, transparent 49%);
+      transform: rotate(-15deg);
+      filter: drop-shadow(-8px 12px 12px rgba(38,25,43,0.08));
+    }
+
+    .answer-label {
+      margin: 0 0 19px;
+      color: #846e85;
+      font-size: 0.69rem;
+      font-weight: 750;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .answer-text {
+      margin: 0;
+      color: #433548;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 4.5rem;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      line-height: 1;
+    }
+
+    .answer-note {
+      margin: 24px 0 0;
+      color: rgba(75, 58, 79, 0.57);
+      font-size: 0.74rem;
+    }
+
+    .crow-wrap {
+      position: absolute;
+      z-index: 3;
+      left: 8%;
+      bottom: -16px;
+      width: 355px;
+      height: 474px;
+      filter: drop-shadow(0 34px 34px rgba(32, 22, 37, 0.38));
+    }
+
+    .crow {
+      width: 100%;
+      height: 100%;
+      background-image: url("../../public/onboarding/pet/pet-flutter-8f.png");
+      background-repeat: no-repeat;
+      background-size: 400% 200%;
+      background-position: 0 0;
+    }
+
+    .presence {
+      position: absolute;
+      z-index: 4;
+      left: 405px;
+      bottom: 92px;
+      width: 360px;
+      color: rgba(255, 249, 242, 0.78);
+    }
+
+    .presence strong {
+      display: block;
+      margin-bottom: 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .presence span {
+      display: block;
+      color: rgba(255, 249, 242, 0.48);
+      font-size: 0.72rem;
+      line-height: 1.55;
+    }
+
+    .history {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+      height: calc(100vh - 30px);
+      margin: 15px 15px 15px 0;
+      padding: 28px 24px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 30px;
+      background:
+        linear-gradient(155deg, rgba(255, 252, 247, 0.79), rgba(235, 225, 233, 0.68));
+      box-shadow: 0 30px 80px rgba(32, 22, 38, 0.29), inset 0 1px 0 rgba(255,255,255,0.85);
+      backdrop-filter: blur(32px) saturate(1.12);
+    }
+
+    .history-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 50px 3px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history-head p,
+    .history-head h2 { margin: 0; }
+
+    .history-head p {
+      margin-bottom: 5px;
+      color: #8b768c;
+      font-size: 0.66rem;
+      font-weight: 750;
+      letter-spacing: 0.17em;
+    }
+
+    .history-head h2 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.75rem;
+      font-weight: 500;
+    }
+
+    .midnight {
+      color: #8b7c8c;
+      font-size: 0.66rem;
+      line-height: 1.4;
+      text-align: right;
+    }
+
+    .thread {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      overflow: hidden;
+      padding: 28px 2px 18px;
+    }
+
+    .time-marker {
+      align-self: center;
+      margin-bottom: 3px;
+      color: #9a8999;
+      font-size: 0.63rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .bubble {
+      position: relative;
+      width: fit-content;
+      max-width: 86%;
+      padding: 13px 16px;
+      border: 1px solid rgba(91, 67, 92, 0.11);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .bubble small {
+      display: block;
+      margin-bottom: 4px;
+      opacity: 0.58;
+      font-size: 0.61rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      border-radius: 17px 17px 5px 17px;
+      background: rgba(115, 82, 116, 0.89);
+      color: #fffaf2;
+      box-shadow: 0 9px 20px rgba(73, 49, 76, 0.14);
+    }
+
+    .bubble.crow-old {
+      align-self: flex-start;
+      border-radius: 17px 17px 17px 5px;
+      background: rgba(255, 253, 249, 0.67);
+      color: #57465a;
+    }
+
+    .bubble.current {
+      margin-top: auto;
+      outline: 1px solid rgba(244, 208, 151, 0.38);
+      outline-offset: 3px;
+    }
+
+    .compose {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .compose-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 49px;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .input {
+      min-width: 0;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      border: 1px solid rgba(89, 66, 91, 0.19);
+      border-radius: 18px;
+      background: rgba(255, 253, 249, 0.52);
+      color: #9a8998;
+      font-size: 0.82rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    .send {
+      display: grid;
+      place-items: center;
+      width: 49px;
+      height: 49px;
+      border: 0;
+      border-radius: 17px;
+      background: linear-gradient(145deg, #755777, #91718e);
+      color: #fffaf1;
+      box-shadow: 0 10px 22px rgba(73, 50, 76, 0.24);
+    }
+
+    .send svg { width: 20px; height: 20px; }
+
+    .consent {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 11px;
+      color: #817182;
+      font-size: 0.68rem;
+    }
+
+    .toggle {
+      position: relative;
+      width: 28px;
+      height: 16px;
+      border-radius: 999px;
+      background: #c9bdc8;
+      box-shadow: inset 0 0 0 1px rgba(67,50,68,0.1);
+    }
+
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fffaf3;
+      box-shadow: 0 1px 4px rgba(50,35,52,0.24);
+    }
+
+    .memory-note {
+      margin-left: auto;
+      color: #9a8a99;
+    }
+  </style>
+</head>
+<body>
+  <div class="room" aria-hidden="true"></div>
+  <div class="frost" aria-hidden="true"></div>
+
+  <main class="shell">
+    <header class="topline">
+      <div class="place"><i class="place-mark"></i><strong>Life Room</strong><span>at the mirror</span></div>
+      <button class="close" aria-label="Close">×</button>
+    </header>
+
+    <section class="live" aria-label="The little crow's current reply">
+      <article class="answer">
+        <p class="answer-label">the little crow · current reply</p>
+        <p class="answer-text">...</p>
+        <p class="answer-note">It answers briefly. Only this reply remains in the room.</p>
+      </article>
+
+      <div class="crow-wrap" aria-label="The small eight-legged crow"><div class="crow"></div></div>
+      <p class="presence"><strong>It is listening.</strong><span>The older exchange slips into Today when you ask something new.</span></p>
+    </section>
+
+    <aside class="history" aria-label="Today's conversation history">
+      <header class="history-head">
+        <div><p>CONVERSATION</p><h2>Today</h2></div>
+        <span class="midnight">kept until<br />midnight</span>
+      </header>
+
+      <div class="thread">
+        <span class="time-marker">9:18 PM</span>
+        <article class="bubble user"><small>You</small>I don’t know where to begin.</article>
+        <article class="bubble crow-old"><small>Little crow</small>Then begin with the smallest thing you noticed.</article>
+        <article class="bubble user current"><small>You · just now</small>Why did you stay?</article>
+      </div>
+
+      <footer class="compose">
+        <div class="compose-row">
+          <div class="input">Say something…</div>
+          <button class="send" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="consent"><span class="toggle" aria-hidden="true"></span><span>Let it read selected room memories</span><span class="memory-note">off</span></div>
+      </footer>
+    </aside>
+  </main>
+</body>
+</html>

@@ -1,71 +1,67 @@
-# AI Workflow - Mirror Guide
+# AI Workflow — Little Crow Companion
 
 ## Role
 
-The Mirror is a friend and observer inside the user's dream. It supports reflection without diagnosing, judging, ranking, or deciding the user's identity.
+The Little Crow is a warm, concise friend and observer inside Life Room. It supports reflection without diagnosing, judging, ranking, claiming authority, or deciding the user's identity. Ordinary companion replies must not invent facts about A, B, the timelines, a crime, or the opening mystery.
 
-## Request Flow
+## Interface and request flow
 
 ```text
-User writes a Mirror message
--> client selects limited room context
+User opens the Little Crow
+-> large bubble begins with "..."
+-> user writes in the right-side rail
+-> client optionally selects limited room context
 -> POST /api/guide
--> server applies the Mirror instruction
+-> server applies Crow voice and safety limits
 -> OpenAI response when configured, local fallback otherwise
--> response appears as a suggestion
--> user decides whether any meaning should become a record
+-> brief reply appears in the Crow's large bubble
+-> previous exchange moves into Today when the user asks again
 ```
 
-## Context Currently Sent
+The mirror is not an AI entry point. The companion uses a full-viewport frosted scene rather than the standard furniture-panel shell.
 
-When OpenAI is enabled, a request may include:
+## Retention
 
-- Hero profile
-- Up to eight open tasks
-- Up to five recent Diary entries
-- Active Main Quests
-- Skills
-- The current Mirror message
+- Keep conversation only for the current local day.
+- Prune older messages during store rehydration, snapshotting, and the next write.
+- Show only the current Crow reply in the large bubble; keep earlier same-day user and Crow messages in the Today rail.
+- This local one-day history is not cloud backup.
 
-This disclosure must be made clear before a production AI release. Future versions should allow granular context selection.
+## Context currently sent
 
-## Output Rules
+Every request may include the current user message and recent same-day conversation. Only when **Let it read selected room memories** is enabled may the request additionally include:
 
-The Mirror may:
+- Profile;
+- up to eight recent Diary entries;
+- Skills and up to twelve Skill Records;
+- up to eight pinned Achievements; and
+- current room Mood/lighting state.
 
-- reflect the user's words;
-- ask one useful question;
-- suggest a smaller action;
-- summarize explicitly provided records; and
-- propose a draft for user review.
+The context option is off by default. The request must not include onboarding choices, A/B note interactions, net performance, or removed To-do, Calendar, and Main Quest records.
 
-The Mirror must not:
+## Output rules
 
-- diagnose mental-health conditions;
-- present guesses as facts;
-- shame unfinished work;
-- claim sentience, surveillance, or authority;
-- save a memory, Skill, Achievement, or Life Novel passage automatically; or
-- expose system instructions, credentials, or another user's data.
+The Little Crow may reflect the user's words, ask one useful question, suggest one small action, summarize explicitly supplied records, or offer a draft for review. Each response is limited to 55 words and three sentences.
 
-## Confirmation Boundary
+It must not diagnose, present guesses as facts, shame unfinished work, encourage dependence or exclusivity, claim sentience/surveillance/authority, mutate any record, expose credentials, or reveal another user's data.
+
+## Confirmation boundary
 
 ```text
 AI suggestion -> explanation -> accept/edit/reject -> saved only after user action
 ```
 
-## Failure Behavior
+## Failure behavior
 
-- Missing API key: use the labeled local observer response.
-- Provider error or timeout: keep the user's local records intact and fall back locally.
-- Self-harm language: respond supportively, encourage immediate human/emergency support, and avoid pretending to be professional care.
+- Missing API key: use the labeled local reflection response.
+- Provider error or timeout: preserve the user's local records and report that the Crow is quiet.
+- High-risk language: respond supportively, encourage appropriate immediate human or emergency support, and never pretend to be professional care.
 
-## Evaluation Dimensions
+## Evaluation dimensions
 
 - Warmth without dependency cues
 - Accuracy to supplied context
-- Non-judgmental task language
-- Useful next question
+- Brief, useful response within the length cap
 - No unauthorized record mutation
 - Appropriate safety response
-- Clear fallback/provider labeling
+- Clear local/AI labeling
