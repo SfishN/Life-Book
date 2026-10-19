@@ -1,4 +1,4 @@
-const CACHE_NAME = "life-room-v8";
+const CACHE_NAME = "life-room-v13";
 const CORE_ASSETS = [
   "/",
   "/room/layers/01_room_base.webp",
@@ -16,8 +16,8 @@ const CORE_ASSETS = [
   "/room/layers/07b_plant_hanging.webp",
   "/room/layers/07e_plant_window.webp",
   "/room/layers/07f_plant_floor.webp",
-  "/characters/girl.png",
-  "/characters/boy.png",
+  "/characters/girl-v2.png",
+  "/characters/boy-v2.png",
   "/icon.svg",
   "/icon-maskable.svg",
   "/onboarding/fonts/A-Kalam-Regular.ttf",
@@ -26,7 +26,7 @@ const CORE_ASSETS = [
   "/onboarding/notes/note-paper-overlap.png",
   "/onboarding/objects/envelope-3f.png",
   "/onboarding/objects/net-sweep-8f.png",
-  "/onboarding/pet/pet-flutter-8f.png",
+  "/onboarding/pet/pet-eight-legs-v5-8f.png",
   "/onboarding/pet/pet-footprint-8.png",
   "/onboarding/pet/pet-threatening-shadow.png",
 ];

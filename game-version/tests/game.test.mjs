@@ -36,11 +36,13 @@ const { useLifeRoomStore: store, GAME_STORAGE_KEY, getLifeRoomSnapshot, guideMes
 const {
   ONBOARDING_STORAGE_KEY,
   createOnboardingState,
+  markFinalNoteRead,
   moveOnboardingTo,
   readOnboardingState,
   setGuidanceMode,
   writeOnboardingState,
 } = await import("../src/domain/onboarding.ts");
+const { getPanelAccess } = await import("../src/onboarding/roomCues.ts");
 
 const neutral = () => ({ diary: [], atmosphere: { mood: "neutral", sourceEntryId: null, sourceDate: null, revision: 0 } });
 const diaryInput = (mood = "calm", date = "2026-10-17") => ({ title: "A quiet walk", body: "I noticed the light on my walk.", date, mood, relatedSkillIds: [] });
@@ -201,13 +203,6 @@ test("room character appearance is derived from gender", () => {
   assert.doesNotMatch(profile, /Girl sprite|Boy sprite/);
 });
 
-test("saved diaries create visible book spines across the bookshelf", () => {
-  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
-  assert.match(room, /const shelfRows = \[330, 414, 500, 579\]/);
-  assert.match(room, /Math\.min\(state\.diaryCount, 12\)/);
-  assert.match(room, /strokeRoundedRect\(x, y, 11, height, 2\)/);
-});
-
 test("little crow conversation keeps only the current local day", () => {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -272,7 +267,7 @@ test("mobile controls provide a two-circle virtual joystick wired to room moveme
   assert.match(room, /addEventListener\("life-room:virtual-move"/);
   assert.match(room, /updatePinchZoom\(\)/);
   assert.match(room, /Pinch with two fingers to zoom/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.virtual-joystick \{ display: block; \}/);
+  assert.match(css, /@media \(max-width: 620px\), \(pointer: coarse\) \{\s*\.virtual-joystick \{\s*display: block;/);
   assert.doesNotMatch(joystick, /virtual-joystick-ring/);
 });
 
@@ -293,6 +288,36 @@ test("onboarding completion and guidance mode remain explicit", () => {
   const complete = moveOnboardingTo(led, "complete");
   assert.equal(complete.status, "complete");
   assert.ok(complete.completedAt);
+});
+
+test("finished furniture opens during the remaining introduction while later furniture stays locked", () => {
+  assert.equal(getPanelAccess("arrival", "diary"), "locked");
+  assert.equal(getPanelAccess("diary", "diary"), "explore");
+  assert.equal(getPanelAccess("diary", "skills"), "locked");
+  assert.equal(getPanelAccess("skills", "diary"), "open");
+  assert.equal(getPanelAccess("skills", "skills"), "explore");
+  assert.equal(getPanelAccess("profile", "hero"), "explore");
+  assert.equal(getPanelAccess("achievements", "hero"), "open");
+  assert.equal(getPanelAccess("novel", "achievements"), "open");
+  assert.equal(getPanelAccess("companion", "novel"), "open");
+  assert.equal(getPanelAccess("reveal", "guide"), "locked");
+  for (const panel of ["diary", "skills", "hero", "achievements", "novel", "guide"]) {
+    assert.equal(getPanelAccess("complete", panel), "open");
+  }
+});
+
+test("the two final notes can be read and restored in either order", () => {
+  for (const first of ["reveal", "adoption"]) {
+    const second = first === "reveal" ? "adoption" : "reveal";
+    const started = moveOnboardingTo(createOnboardingState(), "reveal");
+    const oneRead = markFinalNoteRead(started, first);
+    writeOnboardingState(testStorage, oneRead);
+    const restored = readOnboardingState(testStorage);
+    assert.equal(restored.finalNotesRead[first], true);
+    assert.equal(restored.finalNotesRead[second], false);
+    const bothRead = markFinalNoteRead(restored, second);
+    assert.deepEqual(bothRead.finalNotesRead, { reveal: true, adoption: true });
+  }
 });
 
 test("onboarding contains the approved sequential function and reveal stages", () => {
@@ -323,6 +348,7 @@ test("runtime onboarding assets remain present", () => {
     assert.ok(existsSync(path.join(root, "basics/settings", asset)), `source ${asset} exists`);
     assert.ok(existsSync(path.join(root, "public/onboarding", asset)), `runtime ${asset} exists`);
   }
+  assert.ok(existsSync(path.join(root, "public/onboarding/pet/pet-eight-legs-v5-8f.png")));
 });
 
 test("AI extension points are server routes with no browser-embedded key", () => {

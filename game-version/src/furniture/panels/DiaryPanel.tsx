@@ -33,7 +33,7 @@ function dateLabel(dateKey: string) {
   }).format(new Date(dateKey + "T12:00:00"));
 }
 
-export function DiaryPanel({ onSaved }: { onSaved: () => void }) {
+export function DiaryPanel({ onSaved, guided = false }: { onSaved: () => void; guided?: boolean }) {
   const [tab, setTab] = useState<DiaryTab>("write");
   const [editingId, setEditingId] = useState<string | null>(null);
   const diary = useLifeRoomStore((state) => state.diary);
@@ -50,6 +50,7 @@ export function DiaryPanel({ onSaved }: { onSaved: () => void }) {
           key={editing?.id ?? "new"}
           entry={editing}
           onSaved={onSaved}
+          guided={guided}
           onNew={() => setEditingId(null)}
           onEdit={setEditingId}
         />
@@ -63,11 +64,13 @@ export function DiaryPanel({ onSaved }: { onSaved: () => void }) {
 function DiaryEditor({
   entry,
   onSaved,
+  guided,
   onNew,
   onEdit,
 }: {
   entry?: DiaryEntry;
   onSaved: () => void;
+  guided: boolean;
   onNew: () => void;
   onEdit: (id: string) => void;
 }) {
@@ -147,6 +150,7 @@ function DiaryEditor({
             ))}
           </div>
         </fieldset>
+        {guided && <div className="diary-handwritten-cue" aria-label="Notes from two writers"><p className="line-a"><span className="writer-mark writer-a" aria-hidden="true">○</span> Keep one moment here. Choose how it felt.</p><p className="line-b"><span className="writer-mark writer-b" aria-hidden="true">△</span> Only Save changes the room light.</p></div>}
         <label>Diary title
           <span className="input-with-count">
             <input value={draft.title} maxLength={50} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="A short title for today..." />

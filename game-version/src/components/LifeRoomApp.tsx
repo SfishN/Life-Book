@@ -8,7 +8,6 @@ import {
   BookOpenText,
   Bird,
   DoorOpen,
-  Footprints,
   HelpCircle,
   Leaf,
   Menu,
@@ -17,6 +16,8 @@ import {
 } from "lucide-react";
 import {
   createOnboardingState,
+  type FinalNote,
+  markFinalNoteRead,
   type GuidanceMode,
   moveOnboardingTo,
   type OnboardingState,
@@ -30,6 +31,7 @@ import { getMoodPreset } from "@/domain/mood";
 import { friendlyDate } from "@/domain/dates";
 import { FurniturePanel } from "@/furniture/FurniturePanel";
 import { IntroductionOverlay } from "@/onboarding/IntroductionOverlay";
+import { getPanelAccess, getRoomCue } from "@/onboarding/roomCues";
 import { RoomGame } from "@/room/RoomGame";
 import { useLifeRoomStore } from "@/store/useLifeRoomStore";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -61,18 +63,9 @@ const OBJECTIVES: Partial<Record<OnboardingState["step"], string>> = {
   window: "A pale mark has appeared on the window.",
   net: "Catch three crossings. Missed shapes always return.",
   mirror: "Something moved behind the standing mirror.",
+  companion: "A folded note has fallen near the little crow.",
+  reveal: "Two folded notes have appeared. Read them in either order.",
 };
-
-const INSTRUCTION_STEPS = new Set<OnboardingState["step"]>([
-  "diary",
-  "skills",
-  "profile",
-  "achievements",
-  "novel",
-  "companion",
-  "reveal",
-  "adoption",
-]);
 
 const INSTRUCTION_PANELS: Partial<Record<OnboardingState["step"], PanelId>> = {
   diary: "diary",
@@ -80,7 +73,6 @@ const INSTRUCTION_PANELS: Partial<Record<OnboardingState["step"], PanelId>> = {
   profile: "hero",
   achievements: "achievements",
   novel: "novel",
-  companion: "guide",
 };
 
 const NEXT_INSTRUCTION_STEP: Partial<Record<OnboardingState["step"], OnboardingState["step"]>> = {
@@ -90,7 +82,6 @@ const NEXT_INSTRUCTION_STEP: Partial<Record<OnboardingState["step"], OnboardingS
   achievements: "novel",
   novel: "companion",
   companion: "reveal",
-  reveal: "adoption",
 };
 
 export function LifeRoomApp() {
@@ -105,8 +96,8 @@ export function LifeRoomApp() {
   const [netFeedback, setNetFeedback] = useState("");
   const [sceneNote, setSceneNote] = useState<StoryNote>(null);
   const [reviewFunctions, setReviewFunctions] = useState(false);
-  const [diaryWasSaved, setDiaryWasSaved] = useState(false);
-  const [nudgeCueReady, setNudgeCueReady] = useState(false);
+  const [roomNoteOpen, setRoomNoteOpen] = useState(false);
+  const [activeFinalNote, setActiveFinalNote] = useState<FinalNote | null>(null);
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [onboarding, setOnboarding] = useState<OnboardingState>(createOnboardingState);
 
@@ -121,13 +112,18 @@ export function LifeRoomApp() {
   const memoryLevel = diaryCount + confirmedAchievements * 2 + chapterCount * 3;
   const introductionActive = onboarding.status !== "complete";
   const showArrival = onboardingReady && introductionActive && onboarding.step === "arrival";
-  const showFunctionIntroduction = onboardingReady && (INSTRUCTION_STEPS.has(onboarding.step) || reviewFunctions);
-  const objective = introductionActive ? OBJECTIVES[onboarding.step] : null;
+  const roomCue = getRoomCue(onboarding.step);
+  const unlockedRoomIndex = ROOM_INDEX.filter((item) => getPanelAccess(onboarding.step, item.id) === "open");
+  const proximityAccess = proximity ? getPanelAccess(onboarding.step, proximity.panel) : "locked";
+  const unreadFinalNotes: FinalNote[] = (["reveal", "adoption"] as const).filter((note) => !onboarding.finalNotesRead[note]);
+  const objective = introductionActive
+    ? OBJECTIVES[onboarding.step] ?? (roomCue ? `The little crow is near the ${roomCue.object.toLowerCase()}.` : null)
+    : null;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const restored = readOnboardingState(window.localStorage);
-      setOnboarding(restored);
+      setOnboarding(restored.step === "adoption" ? { ...restored, step: "reveal", finalNotesRead: { reveal: true, adoption: restored.finalNotesRead.adoption } } : restored);
       setOnboardingReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -136,6 +132,15 @@ export function LifeRoomApp() {
   useEffect(() => {
     const open = (event: Event) => {
       const detail = (event as CustomEvent<Proximity>).detail;
+      const access = getPanelAccess(onboarding.step, detail.panel);
+      if (access === "locked") return;
+      if (access === "explore") {
+        setActiveFinalNote(null);
+        setRoomNoteOpen(true);
+        setShowRoomIndex(false);
+        return;
+      }
+      setRoomNoteOpen(false);
       setActivePanel(detail.panel);
       setShowRoomIndex(false);
     };
@@ -161,25 +166,26 @@ export function LifeRoomApp() {
       }
     };
     const onboardingFeedback = (event: Event) => setNetFeedback((event as CustomEvent<{ message: string }>).detail.message);
+    const openRoomNote = (event: Event) => {
+      const requested = (event as CustomEvent<{ note?: FinalNote }>).detail?.note;
+      setActiveFinalNote(requested ?? null);
+      setRoomNoteOpen(true);
+    };
     window.addEventListener("life-room:open", open);
     window.addEventListener("life-room:proximity", nearby);
     window.addEventListener("life-room:onboarding-proximity", nearbyOnboarding);
     window.addEventListener("life-room:onboarding-action", onboardingAction);
     window.addEventListener("life-room:onboarding-feedback", onboardingFeedback);
+    window.addEventListener("life-room:room-note", openRoomNote);
     return () => {
       window.removeEventListener("life-room:open", open);
       window.removeEventListener("life-room:proximity", nearby);
       window.removeEventListener("life-room:onboarding-proximity", nearbyOnboarding);
       window.removeEventListener("life-room:onboarding-action", onboardingAction);
       window.removeEventListener("life-room:onboarding-feedback", onboardingFeedback);
+      window.removeEventListener("life-room:room-note", openRoomNote);
     };
-  }, []);
-
-  useEffect(() => {
-    if (!onboardingReady || onboarding.status !== "complete" || onboarding.guidanceMode !== "nudge" || activePanel || showHelp || showExit || showRoomIndex || reviewFunctions) return;
-    const timer = window.setTimeout(() => setNudgeCueReady(true), 12_000);
-    return () => window.clearTimeout(timer);
-  }, [activePanel, onboarding.guidanceMode, onboarding.status, onboardingReady, reviewFunctions, showExit, showHelp, showRoomIndex]);
+  }, [onboarding.status, onboarding.step]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -187,6 +193,10 @@ export function LifeRoomApp() {
       event.preventDefault();
       if (sceneNote) {
         setSceneNote(null);
+        return;
+      }
+      if (roomNoteOpen) {
+        setRoomNoteOpen(false);
         return;
       }
       if (activePanel) {
@@ -217,17 +227,18 @@ export function LifeRoomApp() {
   }
 
   function moveTo(step: OnboardingState["step"]) {
+    setRoomNoteOpen(false);
+    setActiveFinalNote(null);
     persistOnboarding(moveOnboardingTo(onboarding, step));
   }
 
   function chooseGuidance(mode: GuidanceMode) {
-    setNudgeCueReady(false);
     persistOnboarding(setGuidanceMode(onboarding, mode));
   }
 
   function beginIntroduction() {
     setSceneNote(null);
-    setDiaryWasSaved(false);
+    setRoomNoteOpen(false);
     setNetFeedback("");
     moveTo("envelope");
   }
@@ -238,20 +249,11 @@ export function LifeRoomApp() {
     setSceneNote(null);
     setActivePanel(null);
     setReviewFunctions(false);
+    setShowRoomIndex(false);
     setShowHelp(false);
-    setDiaryWasSaved(false);
+    setRoomNoteOpen(false);
     setNetFeedback("");
-    setNudgeCueReady(false);
     setSaveNotice("");
-  }
-
-  function skipIntroduction() {
-    setSceneNote(null);
-    setActivePanel(null);
-    setShowHelp(false);
-    setReviewFunctions(false);
-    persistOnboarding(moveOnboardingTo(onboarding, "complete"));
-    setSaveNotice("Introduction skipped. You can reset it from Help without changing your records.");
   }
 
   function continueStoryNote() {
@@ -268,16 +270,30 @@ export function LifeRoomApp() {
       setReviewFunctions(false);
       return;
     }
-    setNudgeCueReady(false);
+    setRoomNoteOpen(false);
+    setActiveFinalNote(null);
     persistOnboarding(moveOnboardingTo(onboarding, "complete"));
     setReviewFunctions(false);
     setSaveNotice("The room is open. The little crow remains nearby, watching where you choose to go.");
   }
 
   function openPanel(panel: PanelId) {
+    const access = getPanelAccess(onboarding.step, panel);
+    if (access === "locked" || (access === "explore" && !roomNoteOpen)) return;
+    setRoomNoteOpen(false);
     setActivePanel(panel);
     setShowRoomIndex(false);
-    setNudgeCueReady(false);
+  }
+
+  function explorePanel(panel: PanelId) {
+    const access = getPanelAccess(onboarding.step, panel);
+    if (access === "open") {
+      openPanel(panel);
+      return;
+    }
+    if (access !== "explore") return;
+    setActiveFinalNote(null);
+    setRoomNoteOpen(true);
   }
 
   function closePanel() {
@@ -293,16 +309,27 @@ export function LifeRoomApp() {
     const savedAtmosphere = useLifeRoomStore.getState().atmosphere;
     const preset = getMoodPreset(savedAtmosphere.mood);
     setActivePanel(null);
-    setSaveNotice(`Diary saved. ${preset.description} Your bookshelf remembers this moment.`);
+    setSaveNotice(`Diary saved. ${preset.description}`);
     if (onboarding.step === "diary" && introductionActive) {
-      setDiaryWasSaved(true);
       moveTo("skills");
     }
   }
 
+  function readFinalNote(note: FinalNote) {
+    const read = markFinalNoteRead(onboarding, note);
+    setRoomNoteOpen(false);
+    setActiveFinalNote(null);
+    if (read.finalNotesRead.reveal && read.finalNotesRead.adoption) {
+      persistOnboarding(moveOnboardingTo(read, "complete"));
+      setSaveNotice("Both notes are read. The little crow stays with you.");
+    } else {
+      persistOnboarding(read);
+    }
+  }
+
   function advanceInstruction() {
-    const next = NEXT_INSTRUCTION_STEP[onboarding.step];
-    if (next) moveTo(next);
+    if (onboarding.step !== "companion") return;
+    moveTo("reveal");
   }
 
   function sendOnboardingCommand() {
@@ -319,26 +346,17 @@ export function LifeRoomApp() {
     () => new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date()),
     [],
   );
-  const storyModalOpen = !onboardingReady || showArrival || Boolean(sceneNote) || showFunctionIntroduction;
-  const showGuidanceCue = onboardingReady
-    && onboarding.status === "complete"
-    && !activePanel
-    && !showHelp
-    && !showExit
-    && !showRoomIndex
-    && !reviewFunctions
-    && (onboarding.guidanceMode === "lead" || (onboarding.guidanceMode === "nudge" && nudgeCueReady));
-
+  const storyModalOpen = !onboardingReady || showArrival || Boolean(sceneNote) || roomNoteOpen || reviewFunctions;
   return (
     <main className="life-room-app" data-mood={atmosphere.mood} data-room-revision={atmosphere.revision} data-onboarding-step={onboarding.step}>
       <ServiceWorkerRegistration />
       <RoomGame
         paused={Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen)}
         memoryLevel={memoryLevel}
-        diaryCount={diaryCount}
         atmosphere={atmosphere}
         onboardingStep={onboardingReady ? onboarding.step : "arrival"}
         guidanceMode={onboarding.guidanceMode}
+        finalNotesRead={onboarding.finalNotesRead}
         heroGender={heroGender}
       />
       <div className="room-vignette" aria-hidden="true" />
@@ -347,19 +365,19 @@ export function LifeRoomApp() {
         <div><p className="room-kicker">Life Room</p><p className="room-date">{dateLabel}</p></div>
         <div className="header-actions">
           <span className="room-status">{diaryCount} diary entries · {memoryLevel} memories</span>
-          <button className="glass-button" type="button" aria-label="Diary" onClick={() => openPanel("diary")}><BookHeart size={17} /><span>Diary</span></button>
-          <button className="glass-button" type="button" aria-label="Help" onClick={() => setShowHelp(true)}><HelpCircle size={17} /><span>Help</span></button>
-          <button className="glass-button" type="button" aria-label="Room index" onClick={() => setShowRoomIndex((value) => !value)} aria-expanded={showRoomIndex}><Menu size={17} /><span>Room index</span></button>
+          {getPanelAccess(onboarding.step, "diary") === "open" && <button className="glass-button" type="button" aria-label="Diary" onClick={() => openPanel("diary")}><BookHeart size={17} /><span>Diary</span></button>}
+          <button className="glass-button" type="button" aria-label="Help" onClick={() => { setRoomNoteOpen(false); setShowHelp(true); }}><HelpCircle size={17} /><span>Help</span></button>
+          {unlockedRoomIndex.length > 0 && <button className="glass-button" type="button" aria-label="Room index" onClick={() => { setRoomNoteOpen(false); setShowRoomIndex((value) => !value); }} aria-expanded={showRoomIndex}><Menu size={17} /><span>Room index</span></button>}
         </div>
       </header>
 
       {objective && !storyModalOpen && !activePanel && !showHelp && <div className="story-objective" role="status"><span aria-hidden="true">✦</span>{objective}</div>}
 
-      {showRoomIndex && (
+      {showRoomIndex && unlockedRoomIndex.length > 0 && (
         <nav className="room-index" aria-label="Furniture index">
           <header><div><p className="overline">Accessible room index</p><h2>Visit an object</h2></div><button className="icon-button" type="button" onClick={() => setShowRoomIndex(false)} aria-label="Close room index"><X size={18} /></button></header>
           <div className="room-index-grid">
-            {ROOM_INDEX.map((item) => {
+            {unlockedRoomIndex.map((item) => {
               const Icon = item.icon;
               return <button type="button" key={item.id} onClick={() => openPanel(item.id)}><Icon size={18} /><span><strong>{item.object}</strong><small>{item.label}</small></span></button>;
             })}
@@ -371,23 +389,25 @@ export function LifeRoomApp() {
       <aside className="atmosphere-caption" aria-label="Room lighting"><span className={"mood-swatch mood-" + atmosphere.mood} aria-hidden="true" /><div><strong>{mood.label + " light"}</strong><small>{atmosphere.sourceDate ? "From your diary · " + friendlyDate(atmosphere.sourceDate) : "Save a diary Mood to shape the room light"}</small></div></aside>
 
       {!Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen) && <VirtualJoystick />}
-      {!Boolean(activePanel || showHelp || showExit || showRoomIndex || storyModalOpen) && <p className="mobile-touch-hint">Tap to walk · Pinch to zoom</p>}
 
       {saveNotice && <div className="room-save-notice" role="status"><BookHeart size={20} aria-hidden="true" /><p>{saveNotice}</p><button className="icon-button" type="button" onClick={() => setSaveNotice("")} aria-label="Dismiss message"><X size={17} /></button></div>}
 
-      {showGuidanceCue && !introductionActive && <button className="pet-guidance-cue" type="button" onClick={() => openPanel("diary")}><Footprints size={19} aria-hidden="true" /><span><strong>{onboarding.guidanceMode === "lead" ? "A clear trail reaches the bookshelf." : "Small marks have appeared near the bookshelf."}</strong><small>Open Diary, or choose another place from the Room Index.</small></span></button>}
-
       <div className="interaction-area" aria-live="polite">
         {netFeedback && onboarding.step === "net" && <p className="net-feedback">{netFeedback}</p>}
-        {onboardingProximity && introductionActive ? <button type="button" className="interaction-prompt" onClick={sendOnboardingCommand}><kbd>E</kbd><span>{onboardingProximity.label}</span></button> : proximity && !introductionActive ? <button type="button" className="interaction-prompt" onClick={() => openPanel(proximity.panel)}><kbd>E</kbd><span>Open {proximity.label}</span></button> : <div className="interaction-hint"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span><span><kbd>E</kbd> interact</span></div>}
+        {onboardingProximity && introductionActive && !roomCue ? <button type="button" className="interaction-prompt" onClick={sendOnboardingCommand}><kbd>E</kbd><span>{onboardingProximity.label}</span></button> : proximity && proximityAccess !== "locked" ? <button type="button" className="interaction-prompt" onClick={() => explorePanel(proximity.panel)}><kbd>E</kbd><span>{proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}</span></button> : <div className="interaction-hint"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span><span><kbd>E</kbd> interact</span></div>}
       </div>
 
-      {activePanel && <FurniturePanel panel={activePanel} onClose={closePanel} onDiarySaved={diarySaved} />}
+      {roomCue && !activePanel && !storyModalOpen && <div className="room-paper-shortcuts">
+        {onboarding.step === "reveal" ? unreadFinalNotes.map((note) => <button className="room-paper-shortcut" type="button" key={note} onClick={() => { setActiveFinalNote(note); setRoomNoteOpen(true); }} aria-label={`Read folded note ${note === "reveal" ? 1 : 2}`}><span aria-hidden="true">{note === "reveal" ? "△" : "○"}</span> Read the folded note {note === "reveal" ? 1 : 2}</button>)
+          : <button className="room-paper-shortcut" type="button" onClick={() => { setActiveFinalNote(null); setRoomNoteOpen(true); }} aria-label="Read the folded note"><span aria-hidden="true">○ △</span> Read the folded note</button>}
+      </div>}
 
-      <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={showFunctionIntroduction} reviewMode={reviewFunctions} guidanceMode={onboarding.guidanceMode} diaryWasSaved={diaryWasSaved} onBegin={beginIntroduction} onContinue={continueStoryNote} onSkip={skipIntroduction} onAdvance={advanceInstruction} onComplete={finishIntroduction} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
+      {activePanel && <FurniturePanel panel={activePanel} instructionStep={onboarding.step} onClose={closePanel} onDiarySaved={diarySaved} />}
+
+      <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={roomNoteOpen || reviewFunctions} reviewMode={reviewFunctions} activeFinalNote={activeFinalNote ?? (onboarding.step === "reveal" ? unreadFinalNotes[0] ?? null : null)} guidanceMode={onboarding.guidanceMode} onBegin={beginIntroduction} onContinue={continueStoryNote} onAdvance={advanceInstruction} onExplore={() => { if (roomCue?.panel) openPanel(roomCue.panel); }} onComplete={finishIntroduction} onCloseRoomNote={() => { setRoomNoteOpen(false); setActiveFinalNote(null); }} onReadFinalNote={readFinalNote} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
 
       {showHelp && (
-        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move, and pinch with two fingers to zoom. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{introductionActive ? <button className="small-button" type="button" onClick={skipIntroduction}>Skip to room functions</button> : <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
+        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move, and pinch with two fingers to zoom. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{!introductionActive && <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
       )}
 
       {showExit && <div className="intro-backdrop"><section className="exit-card" role="alertdialog" aria-modal="true" aria-labelledby="exit-title"><DoorOpen size={28} aria-hidden="true" /><h1 id="exit-title">Leave the room for now?</h1>{safeToClose ? <p>Your records are saved locally. It is safe to close this tab or app window.</p> : <p>Your local records and introduction progress are already saved. The room will be here when you return.</p>}<div className="button-row">{!safeToClose && <button className="primary-button" type="button" onClick={attemptExit}>Exit app</button>}<button className="small-button" type="button" onClick={() => { setShowExit(false); setSafeToClose(false); }}>{safeToClose ? "Return to room" : "Stay"}</button></div></section></div>}

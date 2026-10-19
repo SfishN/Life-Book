@@ -7,6 +7,7 @@ import { useTemporaryDraft } from "../useTemporaryDraft";
 
 interface GuidePanelProps {
   onClose: () => void;
+  guided?: boolean;
 }
 
 function messageTime(createdAt: string): string {
@@ -15,7 +16,7 @@ function messageTime(createdAt: string): string {
   return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(value);
 }
 
-export function GuidePanel({ onClose }: GuidePanelProps) {
+export function GuidePanel({ onClose, guided = false }: GuidePanelProps) {
   const allMessages = useLifeRoomStore((state) => state.guideMessages);
   const addGuideMessage = useLifeRoomStore((state) => state.addGuideMessage);
   const [draft, setDraft, clearDraft] = useTemporaryDraft("guide:message", { message: "" });
@@ -109,6 +110,7 @@ export function GuidePanel({ onClose }: GuidePanelProps) {
           </div>
 
           <div className="crow-compose">
+            {guided && <div className="crow-guided-writing" aria-label="Notes from two writers"><p className="line-a">○ Ask it one question.</p><p className="line-b">△ Room memories are shared only if you choose.</p></div>}
             {error && <p className="crow-error" role="alert">{error}</p>}
             <form className="crow-input" onSubmit={submit}>
               <label className="sr-only" htmlFor="crow-message">Say something to the little crow</label>

@@ -10,6 +10,8 @@ import {
   X,
 } from "lucide-react";
 import type { PanelId } from "@/domain/types";
+import type { OnboardingStep } from "@/domain/onboarding";
+import { getRoomCue } from "@/onboarding/roomCues";
 import { AchievementPanel } from "./panels/AchievementPanel";
 import { DiaryPanel } from "./panels/DiaryPanel";
 import { GuidePanel } from "./panels/GuidePanel";
@@ -19,6 +21,7 @@ import { SkillPanel } from "./panels/SkillPanel";
 
 interface FurniturePanelProps {
   panel: PanelId;
+  instructionStep?: OnboardingStep;
   onClose: () => void;
   onDiarySaved: () => void;
 }
@@ -32,8 +35,16 @@ const PANEL_META: Record<PanelId, { title: string; icon: typeof BookOpenText; sk
   skills: { title: "Skill Tree", icon: Leaf, skin: "plant" },
 };
 
-export function FurniturePanel({ panel, onClose, onDiarySaved }: FurniturePanelProps) {
-  if (panel === "guide") return <GuidePanel onClose={onClose} />;
+const PANEL_WRITING: Partial<Record<PanelId, { round: string; sharp: string }>> = {
+  skills: { round: "Choose something you want to practice. One real attempt is enough to begin.", sharp: "The plant grows from saved Skill Records, not from promises." },
+  hero: { round: "Tell the room what to call you now.", sharp: "Your name and attributes can be edited later." },
+  achievements: { round: "A moment can live on this wall.", sharp: "Only you choose what to pin or dismiss." },
+  novel: { round: "Your days can become a chapter.", sharp: "Choose the records, edit the draft, then approve it yourself." },
+};
+
+export function FurniturePanel({ panel, instructionStep, onClose, onDiarySaved }: FurniturePanelProps) {
+  const guided = getRoomCue(instructionStep ?? "complete")?.panel === panel;
+  if (panel === "guide") return <GuidePanel onClose={onClose} guided={guided} />;
 
   const meta = PANEL_META[panel];
   const Icon = meta.icon;
@@ -59,7 +70,8 @@ export function FurniturePanel({ panel, onClose, onDiarySaved }: FurniturePanelP
           </button>
         </header>
         <div className="panel-content life-modal-content">
-          {panel === "diary" && <DiaryPanel onSaved={onDiarySaved} />}
+          {guided && PANEL_WRITING[panel] && <div className="panel-handwritten-cue" aria-label="Notes from two writers"><p className="line-a"><span className="writer-mark writer-a" aria-hidden="true">○</span> {PANEL_WRITING[panel].round}</p><p className="line-b"><span className="writer-mark writer-b" aria-hidden="true">△</span> {PANEL_WRITING[panel].sharp}</p></div>}
+          {panel === "diary" && <DiaryPanel onSaved={onDiarySaved} guided={guided} />}
           {panel === "skills" && <SkillPanel />}
           {panel === "hero" && <ProfilePanel />}
           {panel === "achievements" && <AchievementPanel />}

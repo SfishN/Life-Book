@@ -113,9 +113,6 @@ h3 {
 
 .room-game canvas {
   display: block;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain;
   touch-action: none;
 }
 
@@ -182,10 +179,6 @@ h3 {
   box-shadow: 0 7px 18px rgba(31, 21, 38, 0.34);
   pointer-events: none;
   will-change: transform;
-}
-
-.mobile-touch-hint {
-  display: none;
 }
 
 .room-date {
@@ -1235,23 +1228,6 @@ button:disabled {
   .header-actions { gap: 5px; }
   .glass-button { justify-content: center; width: 38px; height: 38px; padding: 0; }
   .glass-button span { display: none; }
-  .virtual-joystick { display: block; }
-  .mobile-touch-hint {
-    display: block;
-    position: absolute;
-    z-index: 21;
-    right: 14px;
-    bottom: max(23px, env(safe-area-inset-bottom));
-    margin: 0;
-    padding: 7px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 999px;
-    background: rgba(47, 35, 57, 0.52);
-    color: rgba(255, 248, 237, 0.76);
-    font-size: 0.65rem;
-    pointer-events: none;
-    backdrop-filter: blur(8px);
-  }
   .interaction-hint { display: none; }
   .panel-backdrop { padding: 10px; }
   .furniture-panel { width: 94vw; height: 84vh; min-height: 420px; border-radius: 22px; }
@@ -1439,13 +1415,6 @@ button:disabled {
   transform: rotate(-45deg);
 }
 
-.note-tag {
-  margin-left: 10%;
-  border: 1px dashed rgba(106, 76, 74, 0.28);
-  background: rgba(246, 228, 191, 0.32);
-  transform: rotate(0.8deg);
-}
-
 .mirror-exchange {
   width: min(500px, 60%);
 }
@@ -1461,19 +1430,6 @@ button:disabled {
   margin: 15px auto;
   border: 0;
   border-top: 1px dashed rgba(59, 46, 58, 0.3);
-}
-
-.mystery-count-note {
-  width: fit-content;
-  margin: 16px auto 0 !important;
-  padding: 5px 12px !important;
-  border: 1px solid rgba(59, 46, 58, 0.18);
-  border-radius: 999px;
-  color: rgba(59, 46, 58, 0.58);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.74rem;
-  font-style: italic;
-  letter-spacing: 0.04em;
 }
 
 .function-backdrop {
@@ -1507,102 +1463,6 @@ button:disabled {
 .function-introduction > header > svg {
   flex: 0 0 auto;
   color: var(--lavender);
-}
-
-.guided-instruction {
-  width: min(850px, 94vw);
-}
-
-.guided-instruction-body {
-  display: grid;
-  gap: 14px;
-}
-
-.instruction-dialogue {
-  padding: 13px 17px;
-  border: 1px solid rgba(96, 72, 98, 0.16);
-  border-radius: 17px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.64), rgba(239, 229, 219, 0.46));
-}
-
-.instruction-dialogue > p {
-  margin: 7px 0;
-  line-height: 1.55;
-}
-
-.instruction-dialogue hr {
-  width: 78%;
-  margin: 14px auto;
-  border: 0;
-  border-top: 1px dashed rgba(86, 66, 87, 0.24);
-}
-
-.instruction-list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 14px 18px 14px 36px;
-  border: 1px solid var(--line);
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.48);
-  color: var(--ink-soft);
-  font-size: 0.84rem;
-  line-height: 1.5;
-}
-
-.long-exchange {
-  max-height: min(57vh, 530px);
-  overflow: auto;
-  padding-right: 21px;
-}
-
-.crow-reveal-scene {
-  display: grid;
-  grid-template-columns: minmax(190px, 0.7fr) minmax(300px, 1.3fr);
-  align-items: end;
-  gap: 18px;
-  margin-top: 8px;
-}
-
-.instruction-crow-portrait {
-  width: min(260px, 100%);
-  aspect-ratio: 384 / 512;
-  justify-self: center;
-  background: url("/onboarding/pet/pet-flutter-8f.png") 0 0 / 400% 200% no-repeat;
-  filter: drop-shadow(0 24px 22px rgba(34, 23, 40, 0.26));
-  animation: crow-introduction-breathe 2.8s ease-in-out infinite;
-}
-
-@keyframes crow-introduction-breathe {
-  0%, 100% { transform: translateY(0) rotate(-0.5deg); }
-  50% { transform: translateY(-5px) rotate(0.5deg); }
-}
-
-.companion-handwritten-guide {
-  margin-top: 13px;
-}
-
-.adoption-crow-bubble {
-  width: fit-content;
-  margin: 14px auto 0;
-  padding: 13px 26px 16px;
-  border: 1px solid rgba(109, 85, 115, 0.24);
-  border-radius: 50% 50% 46% 54%;
-  background: rgba(255, 255, 255, 0.72);
-  color: #544159;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2rem;
-  letter-spacing: 0.14em;
-  box-shadow: 0 12px 30px rgba(50, 35, 57, 0.11);
-}
-
-.function-status {
-  padding: 10px 13px;
-  border-left: 3px solid var(--gold);
-  background: rgba(226, 206, 173, 0.22);
-  color: var(--ink-soft);
-  font-size: 0.82rem;
-  line-height: 1.5;
 }
 
 .function-teaching-grid {
@@ -1712,37 +1572,6 @@ button:disabled {
   text-align: center;
 }
 
-.pet-guidance-cue {
-  position: absolute;
-  z-index: 21;
-  left: 22px;
-  bottom: 92px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 370px;
-  padding: 11px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.27);
-  border-radius: 16px;
-  background: rgba(51, 39, 61, 0.82);
-  color: #fff8ed;
-  box-shadow: 0 12px 35px rgba(24, 17, 31, 0.28);
-  text-align: left;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-}
-
-.pet-guidance-cue strong,
-.pet-guidance-cue small {
-  display: block;
-}
-
-.pet-guidance-cue small {
-  margin-top: 2px;
-  color: rgba(255, 248, 237, 0.72);
-  font-size: 0.69rem;
-}
-
 .room-index-guidance {
   display: flex;
   align-items: center;
@@ -1773,8 +1602,6 @@ button:disabled {
   .guidance-choice { grid-template-columns: 1fr; }
   .final-note { display: none; }
   .story-objective { top: 82px; }
-  .crow-reveal-scene { grid-template-columns: 145px minmax(0, 1fr); gap: 8px; }
-  .long-exchange { max-height: 52vh; }
 }
 
 @media (max-width: 620px) {
@@ -1785,17 +1612,7 @@ button:disabled {
   .story-note-copy h1 { font-size: 1.2rem; }
   .handwriting-a, .line-a { font-size: 1rem; }
   .handwriting-b, .line-b { font-size: 0.68rem; }
-  .pet-guidance-cue { left: 10px; bottom: 78px; max-width: calc(100vw - 20px); }
   .compact-guidance-choice { grid-template-columns: 1fr; }
-  .guided-instruction { width: 96vw; padding: 17px 15px; }
-  .guided-instruction h1 { font-size: 1.45rem; }
-  .crow-reveal-scene { grid-template-columns: 108px minmax(0, 1fr); }
-  .instruction-dialogue { padding: 10px 12px; }
-  .instruction-list { padding: 11px 12px 11px 28px; font-size: 0.76rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .instruction-crow-portrait { animation: none; }
 }
 
 /* Life Room function panels v2 */
@@ -2642,8 +2459,8 @@ button.list-row { cursor: pointer; }
   left: 7%;
   bottom: -22px;
   width: 355px;
-  height: 474px;
-  background: url("/onboarding/pet/pet-flutter-8f.png") 0 0 / 400% 200% no-repeat;
+  height: 355px;
+  background: url("/onboarding/pet/pet-eight-legs-v5-8f.png") 0 0 / 400% 200% no-repeat;
   filter: drop-shadow(0 32px 30px rgba(29, 18, 34, 0.4));
 }
 
@@ -2938,7 +2755,7 @@ button.list-row { cursor: pointer; }
     left: 4%;
     bottom: -20px;
     width: 230px;
-    height: 307px;
+    height: 230px;
   }
 
   .crow-live-note { display: none; }
@@ -3022,7 +2839,7 @@ button.list-row { cursor: pointer; }
     left: -3%;
     bottom: -18px;
     width: 190px;
-    height: 253px;
+    height: 190px;
   }
 
   .crow-history {
@@ -3039,4 +2856,167 @@ button.list-row { cursor: pointer; }
   .crow-input button { height: 44px; }
   .crow-input button { width: 44px; }
   .crow-context-consent { font-size: 0.6rem; }
+}
+
+.room-paper-shortcuts {
+  position: absolute;
+  z-index: 21;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(25px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.room-paper-shortcut {
+  padding: 8px 13px;
+  border: 1px solid rgba(250, 227, 181, 0.48);
+  border-radius: 10px;
+  background: rgba(48, 34, 53, 0.72);
+  color: #fff4da;
+  font-size: 0.72rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.room-paper-shortcut span { margin-right: 7px; font-family: Georgia, serif; }
+.room-paper-shortcut:hover { background: rgba(78, 53, 79, 0.9); }
+.room-paper-shortcut:focus-visible { outline: 2px solid #fff4da; outline-offset: 2px; }
+
+.room-paper-note {
+  position: absolute;
+  z-index: 70;
+  top: 50%;
+  right: clamp(24px, 6vw, 110px);
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(78vh, 680px);
+  overflow: auto;
+  padding: 32px 28px 22px;
+  clip-path: polygon(1% 3%, 98% 0, 100% 7%, 98% 97%, 3% 100%, 0 94%);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(127, 85, 66, 0.1), transparent 34%),
+    repeating-linear-gradient(5deg, transparent 0 25px, rgba(104, 78, 70, 0.025) 26px 27px),
+    #f5e9d7;
+  color: #413543;
+  box-shadow: 0 24px 55px rgba(20, 13, 27, 0.4);
+  transform: translateY(-50%) rotate(-1.5deg);
+}
+
+.room-paper-story {
+  right: auto;
+  left: 50%;
+  width: min(670px, calc(100vw - 32px));
+  transform: translate(-50%, -50%) rotate(-0.5deg);
+}
+
+.room-paper-close {
+  position: absolute;
+  top: 13px;
+  right: 15px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(90, 69, 82, 0.11);
+  color: #514052;
+  cursor: pointer;
+}
+
+.room-paper-writing { display: grid; gap: 12px; margin-top: 12px; }
+.room-paper-writing p { margin: 0; line-height: 1.42; }
+.room-paper-writing .line-a { font-size: clamp(1.12rem, 2vw, 1.5rem); }
+.room-paper-writing .line-b { font-size: clamp(0.82rem, 1.35vw, 1.05rem); }
+.room-paper-story .room-paper-writing { gap: 15px; }
+.room-paper-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
+
+.panel-handwritten-cue,
+.diary-handwritten-cue {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 15px;
+  padding: 7px 12px;
+  transform: rotate(-0.35deg);
+}
+
+.panel-handwritten-cue p,
+.diary-handwritten-cue p,
+.crow-guided-writing p { margin: 0; line-height: 1.4; }
+.panel-handwritten-cue .line-a,
+.diary-handwritten-cue .line-a { font-size: clamp(1rem, 1.7vw, 1.3rem); }
+.panel-handwritten-cue .line-b,
+.diary-handwritten-cue .line-b { font-size: clamp(0.74rem, 1.2vw, 0.92rem); }
+.diary-handwritten-cue { margin: -5px 0 10px; }
+
+.crow-guided-writing {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  background: rgba(247, 230, 204, 0.54);
+}
+
+.crow-guided-writing .line-a { font-size: 1.05rem; }
+.crow-guided-writing .line-b { font-size: 0.78rem; }
+
+@media (max-width: 620px) {
+  .room-paper-shortcuts { right: 12px; bottom: 76px; max-width: calc(100vw - 24px); }
+  .room-paper-shortcut { font-size: 0.65rem; }
+  .room-paper-note,
+  .room-paper-story {
+    right: auto;
+    left: 50%;
+    width: calc(100vw - 24px);
+    padding: 30px 21px 20px;
+  }
+  .room-paper-note:not(.room-paper-story) {
+    top: auto;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    max-height: 42vh;
+    transform: translateX(-50%) rotate(-0.5deg);
+  }
+  .room-paper-story {
+    top: 50%;
+    max-height: 72vh;
+    transform: translate(-50%, -50%) rotate(-0.5deg);
+  }
+  .room-paper-writing { gap: 9px; }
+  .room-paper-story .room-paper-writing { gap: 12px; }
+}
+
+@media (max-width: 620px), (pointer: coarse) {
+  .virtual-joystick {
+    display: block;
+    left: calc(50% - min(50vw, 75dvh) + 8px);
+    top: calc(50% + min(50dvh, 33.333vw) + 14px);
+    bottom: auto;
+    width: clamp(104px, 28vw, 118px);
+    height: clamp(104px, 28vw, 118px);
+  }
+
+  .virtual-joystick-knob {
+    width: 46px;
+    height: 46px;
+    margin: -23px 0 0 -23px;
+  }
+
+  .atmosphere-caption {
+    top: calc(50% + min(50dvh, 33.333vw) + 14px);
+    bottom: auto;
+    right: calc(50% - min(50vw, 75dvh) + 8px);
+    left: calc(50% - min(50vw, 75dvh) + clamp(104px, 28vw, 118px) + 20px);
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-paper-note { transform: translateY(-50%); }
+  .room-paper-story { transform: translate(-50%, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 620px) {
+  .room-paper-note:not(.room-paper-story) { transform: translateX(-50%); }
 }
