@@ -271,6 +271,33 @@ test("mobile controls provide a two-circle virtual joystick wired to room moveme
   assert.doesNotMatch(joystick, /virtual-joystick-ring/);
 });
 
+test("mobile introduction can catch crossings from the bottom interaction prompt", () => {
+  const app = readFileSync(path.join(root, "src/components/LifeRoomApp.tsx"), "utf8");
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  const css = readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(app, /dispatchEvent\(new CustomEvent\("life-room:interact"\)\)/);
+  assert.match(room, /addEventListener\("life-room:interact", this\.onInteractCommand\)/);
+  assert.match(room, /JustDown\(this\.keys\.interact\)\) this\.performCurrentInteraction\(\)/);
+  assert.match(room, /this\.onboardingStep === "net"\) \{\s*this\.sweepNet\(\)/);
+  assert.match(room, /this\.coarsePointer \? 330 : 235/);
+  assert.match(room, /this\.coarsePointer \? 3200 : 6500/);
+  assert.match(css, /@media \(hover: none\), \(pointer: coarse\)/);
+  assert.match(css, /\.touch-interact-label \{\s*display: inline-flex;/);
+});
+
+test("pinch zoom expands the room viewport and keeps two-axis camera movement bounded", () => {
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  assert.match(room, /mode: Phaser\.Scale\.RESIZE/);
+  assert.match(room, /Math\.min\(viewportWidth \/ ROOM_WORLD_WIDTH, viewportHeight \/ ROOM_WORLD_HEIGHT\)/);
+  assert.match(room, /verticalFillZoom \* CAMERA_OVERSCAN_AFTER_VERTICAL_FILL/);
+  assert.match(room, /this\.cameraCenter\.x = halfViewWidth >= ROOM_WORLD_WIDTH \/ 2/);
+  assert.match(room, /this\.cameraCenter\.y = halfViewHeight >= ROOM_WORLD_HEIGHT \/ 2/);
+  assert.match(room, /this\.cameraCenter\.x -= \(pointer\.x - this\.panLast\.x\) \/ camera\.zoom/);
+  assert.match(room, /this\.cameraCenter\.y -= \(pointer\.y - this\.panLast\.y\) \/ camera\.zoom/);
+  assert.match(room, /CAMERA_PAN_THRESHOLD = 10/);
+  assert.doesNotMatch(room, /setZoom\(zoom\)\.centerOn\(768, 512\)/);
+});
+
 test("onboarding uses a new namespace and preserves Life Room records", () => {
   store.getState().addDiary(diaryInput("tired"));
   const recordsBefore = saved.get(GAME_STORAGE_KEY);

@@ -285,17 +285,6 @@ export function LifeRoomApp() {
     setShowRoomIndex(false);
   }
 
-  function explorePanel(panel: PanelId) {
-    const access = getPanelAccess(onboarding.step, panel);
-    if (access === "open") {
-      openPanel(panel);
-      return;
-    }
-    if (access !== "explore") return;
-    setActiveFinalNote(null);
-    setRoomNoteOpen(true);
-  }
-
   function closePanel() {
     const closingPanel = activePanel;
     setActivePanel(null);
@@ -332,9 +321,8 @@ export function LifeRoomApp() {
     moveTo("reveal");
   }
 
-  function sendOnboardingCommand() {
-    if (!onboardingProximity) return;
-    window.dispatchEvent(new CustomEvent("life-room:onboarding-command", { detail: { action: onboardingProximity.action } }));
+  function interactFromPrompt() {
+    window.dispatchEvent(new CustomEvent("life-room:interact"));
   }
 
   function attemptExit() {
@@ -394,7 +382,7 @@ export function LifeRoomApp() {
 
       <div className="interaction-area" aria-live="polite">
         {netFeedback && onboarding.step === "net" && <p className="net-feedback">{netFeedback}</p>}
-        {onboardingProximity && introductionActive && !roomCue ? <button type="button" className="interaction-prompt" onClick={sendOnboardingCommand}><kbd>E</kbd><span>{onboardingProximity.label}</span></button> : proximity && proximityAccess !== "locked" ? <button type="button" className="interaction-prompt" onClick={() => explorePanel(proximity.panel)}><kbd>E</kbd><span>{proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}</span></button> : <div className="interaction-hint"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span><span><kbd>E</kbd> interact</span></div>}
+        {onboardingProximity && introductionActive && !roomCue ? <button type="button" className="interaction-prompt" onClick={interactFromPrompt} aria-label={`${onboardingProximity.label}. Press E or tap to interact.`}><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>{onboardingProximity.label}</span></button> : proximity && proximityAccess !== "locked" ? <button type="button" className="interaction-prompt" onClick={interactFromPrompt} aria-label={`${proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}. Press E or tap to interact.`}><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>{proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}</span></button> : <div className="interaction-hint"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span><span><kbd>E</kbd> interact</span></div>}
       </div>
 
       {roomCue && !activePanel && !storyModalOpen && <div className="room-paper-shortcuts">
@@ -407,7 +395,7 @@ export function LifeRoomApp() {
       <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={roomNoteOpen || reviewFunctions} reviewMode={reviewFunctions} activeFinalNote={activeFinalNote ?? (onboarding.step === "reveal" ? unreadFinalNotes[0] ?? null : null)} guidanceMode={onboarding.guidanceMode} onBegin={beginIntroduction} onContinue={continueStoryNote} onAdvance={advanceInstruction} onExplore={() => { if (roomCue?.panel) openPanel(roomCue.panel); }} onComplete={finishIntroduction} onCloseRoomNote={() => { setRoomNoteOpen(false); setActiveFinalNote(null); }} onReadFinalNote={readFinalNote} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
 
       {showHelp && (
-        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move, and pinch with two fingers to zoom. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{!introductionActive && <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
+        <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move. Pinch with two fingers to enlarge the whole room, then drag it within its edges to look around. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{!introductionActive && <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
       )}
 
       {showExit && <div className="intro-backdrop"><section className="exit-card" role="alertdialog" aria-modal="true" aria-labelledby="exit-title"><DoorOpen size={28} aria-hidden="true" /><h1 id="exit-title">Leave the room for now?</h1>{safeToClose ? <p>Your records are saved locally. It is safe to close this tab or app window.</p> : <p>Your local records and introduction progress are already saved. The room will be here when you return.</p>}<div className="button-row">{!safeToClose && <button className="primary-button" type="button" onClick={attemptExit}>Exit app</button>}<button className="small-button" type="button" onClick={() => { setShowExit(false); setSafeToClose(false); }}>{safeToClose ? "Return to room" : "Stay"}</button></div></section></div>}

@@ -113,6 +113,8 @@ h3 {
 
 .room-game canvas {
   display: block;
+  width: 100%;
+  height: 100%;
   touch-action: none;
 }
 
@@ -293,17 +295,70 @@ h3 {
 
 .interaction-area {
   position: absolute;
-  z-index: 18;
+  z-index: 26;
   left: 50%;
   bottom: max(22px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .interaction-prompt {
   min-width: 200px;
+  min-height: 48px;
   justify-content: center;
   background: rgba(54, 41, 64, 0.8);
   font-weight: 700;
+  pointer-events: auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.interaction-prompt:active {
+  transform: translateY(1px) scale(0.99);
+  background: rgba(82, 61, 91, 0.9);
+}
+
+.touch-interact-label {
+  display: none;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .interaction-area {
+    right: max(12px, env(safe-area-inset-right));
+    left: auto;
+    width: min(240px, calc(100vw - 158px));
+    transform: none;
+  }
+
+  .interaction-prompt {
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .interaction-prompt kbd {
+    display: none;
+  }
+
+  .touch-interact-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 38px;
+    min-height: 28px;
+    padding: 3px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
 }
 
 kbd {

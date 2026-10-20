@@ -24,6 +24,11 @@ const HERO_WALK_FRAMES = [1, 2, 3, 2] as const;
 const CROW_SPRITE_SCALE = 0.34;
 const ROOM_WALK_SPEED = 300;
 const INTRODUCTION_WALK_SPEED = 420;
+const ROOM_WORLD_WIDTH = 1536;
+const ROOM_WORLD_HEIGHT = 1024;
+const CAMERA_PAN_THRESHOLD = 10;
+const CAMERA_OVERSCAN_AFTER_VERTICAL_FILL = 1.2;
+const MAX_ROOM_ZOOM = 4.2;
 type IntroAction = "envelope" | "window" | "sweep" | "mirror";
 type RoomKey = "up" | "down" | "left" | "right" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight" | "interact";
 
@@ -160,7 +165,17 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private destination: Phaser.Math.Vector2 | null = null;
         private virtualMove = { x: 0, y: 0 };
         private pinchStartDistance = 0;
-        private pinchStartZoom = 1;
+        private pinchStartRoomZoom = 1;
+        private pinchFocusWorld = { x: ROOM_WORLD_WIDTH / 2, y: ROOM_WORLD_HEIGHT / 2 };
+        private roomZoom = 1;
+        private baseCameraZoom = 1;
+        private maxRoomZoom = 1.8;
+        private cameraCenter = { x: ROOM_WORLD_WIDTH / 2, y: ROOM_WORLD_HEIGHT / 2 };
+        private panPointerId: number | null = null;
+        private panStart = { x: 0, y: 0 };
+        private panLast = { x: 0, y: 0 };
+        private cameraDragging = false;
+        private gestureHadPinch = false;
         private nearest: Hotspot | null = null;
         private introNearest: IntroductionHotspot | null = null;
         private introPrompt = "";
@@ -194,6 +209,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private onboardingStep: OnboardingStep = "arrival";
         private guidanceMode: GuidanceMode = "nudge";
         private reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        private coarsePointer = window.matchMedia("(pointer: coarse)").matches;
         private lightTransition = { value: 0 };
 
         private onHeroGender = (event: Event) => {
@@ -221,6 +237,12 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           const action = (event as CustomEvent<{ action: IntroAction }>).detail.action;
           if (action === "sweep" && this.onboardingStep === "net") this.sweepNet();
           else if (this.introNearest?.action === action) this.performIntroductionAction(action);
+        };
+        private onInteractCommand = () => {
+          this.performCurrentInteraction();
+        };
+        private onScaleResize = () => {
+          this.layoutCamera();
         };
         private onVirtualMove = (event: Event) => {
           const detail = (event as CustomEvent<{ x?: number; y?: number }>).detail;
@@ -316,6 +338,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
 
           this.currentGender = heroGenderRef.current === "boy" ? "male" : "female";
           this.hero = this.createHero(745, 780).setDepth(8);
+          this.layoutCamera();
           const keyboard = this.input.keyboard;
           if (keyboard) {
             this.keys = {
@@ -331,65 +354,18 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             };
           }
 
-          this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-            if (this.panelOpen) return;
-            if (this.input.manager.pointers.filter((item) => item.isDown).length > 1) {
-              this.destination = null;
-              return;
-            }
-            const point = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
-            const roomCue = getRoomCue(this.onboardingStep);
-            if (this.onboardingStep === "complete" && this.pet.visible && Math.abs(point.x - this.pet.x) < 45 && Math.abs(point.y - this.pet.y) < 60) {
-              this.openPanel(HOTSPOTS.find((hotspot) => hotspot.id === "guide")!);
-              return;
-            }
-            if (roomCue) {
-              if (this.instructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.instructionPaper.x, this.instructionPaper.y) < 50) {
-                this.openRoomNote(this.onboardingStep === "reveal" ? "reveal" : undefined);
-                return;
-              }
-              if (this.secondInstructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.secondInstructionPaper.x, this.secondInstructionPaper.y) < 50) {
-                this.openRoomNote("adoption");
-                return;
-              }
-            }
-            if (roomCue) {
-              const direct = HOTSPOTS.find((hotspot) => getPanelAccess(this.onboardingStep, hotspot.id) !== "locked" && insideHotspot(point.x, point.y, hotspot));
-              if (direct) {
-                this.openPanel(direct);
-                return;
-              }
-              this.setWalkDestination(point);
-              return;
-            }
-            if (this.onboardingStep !== "complete") {
-              if (this.onboardingStep === "net") {
-                this.setWalkDestination(point);
-                return;
-              }
-              const introSpot = this.getCurrentIntroductionHotspot();
-              if (introSpot && Phaser.Math.Distance.Between(
-                point.x, point.y, introSpot.clickX ?? introSpot.x, introSpot.clickY ?? introSpot.y,
-              ) < (introSpot.clickRadius ?? introSpot.radius)) {
-                this.performIntroductionAction(introSpot.action);
-                return;
-              }
-              this.setWalkDestination(point);
-              return;
-            }
-            const direct = HOTSPOTS.find((hotspot) => insideHotspot(point.x, point.y, hotspot));
-            if (direct) {
-              this.openPanel(direct);
-              return;
-            }
-            this.setWalkDestination(point);
-          });
+          this.input.on("pointerdown", this.startPointerGesture, this);
+          this.input.on("pointermove", this.movePointerGesture, this);
+          this.input.on("pointerup", this.finishPointerGesture, this);
+          this.input.on("pointerupoutside", this.finishPointerGesture, this);
+          this.scale.on(Phaser.Scale.Events.RESIZE, this.onScaleResize);
 
           window.addEventListener("life-room:hero-gender", this.onHeroGender);
           window.addEventListener("life-room:pause", this.onPause);
           window.addEventListener("life-room:memory", this.onMemory);
           window.addEventListener("life-room:onboarding", this.onOnboarding);
           window.addEventListener("life-room:onboarding-command", this.onOnboardingCommand);
+          window.addEventListener("life-room:interact", this.onInteractCommand);
           window.addEventListener("life-room:virtual-move", this.onVirtualMove);
           this.applyVisualState(visualRef.current, false);
           this.onboardingStep = onboardingRef.current.step;
@@ -404,7 +380,9 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             window.removeEventListener("life-room:memory", this.onMemory);
             window.removeEventListener("life-room:onboarding", this.onOnboarding);
             window.removeEventListener("life-room:onboarding-command", this.onOnboardingCommand);
+            window.removeEventListener("life-room:interact", this.onInteractCommand);
             window.removeEventListener("life-room:virtual-move", this.onVirtualMove);
+            this.scale.off(Phaser.Scale.Events.RESIZE, this.onScaleResize);
           });
         }
 
@@ -423,6 +401,10 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           this.panelOpen = pausedState;
           this.destination = null;
           this.virtualMove = { x: 0, y: 0 };
+          this.panPointerId = null;
+          this.cameraDragging = false;
+          this.gestureHadPinch = false;
+          this.pinchStartDistance = 0;
           this.input.keyboard?.resetKeys();
         }
 
@@ -560,10 +542,14 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           if (!this.currentBird || this.panelOpen) return;
           this.net.setPosition(this.hero.x + (this.heroFacing === "left" ? -42 : 42), this.hero.y - 28).setFlipX(this.heroFacing === "left").setVisible(true).play("intro-net-sweep", true).setScale(0.34);
           const distance = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, this.currentBird.x, this.currentBird.y);
-          const assisted = this.time.now - this.birdStartedAt > 6500;
+          const catchRadius = this.coarsePointer ? 330 : 235;
+          const assistDelay = this.coarsePointer ? 3200 : 6500;
+          const assisted = this.time.now - this.birdStartedAt > assistDelay;
           window.dispatchEvent(new CustomEvent("life-room:onboarding-action", { detail: { action: "sweep" } }));
-          if (distance > 235 && !assisted) {
-            this.dispatchFeedback("The light slips past, curves around, and comes back. Move closer and sweep again.");
+          if (distance > catchRadius && !assisted) {
+            this.dispatchFeedback(this.coarsePointer
+              ? "The crossing curves away. Move closer, then tap the prompt again. It will slow down if you need it."
+              : "The light slips past, curves around, and comes back. Move closer and sweep again.");
             return;
           }
           const caught = this.currentBird;
@@ -713,6 +699,164 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           window.dispatchEvent(new CustomEvent("life-room:room-note", { detail: { note } }));
         }
 
+        private layoutCamera() {
+          const viewportWidth = Math.max(1, this.scale.width);
+          const viewportHeight = Math.max(1, this.scale.height);
+          this.baseCameraZoom = Math.min(viewportWidth / ROOM_WORLD_WIDTH, viewportHeight / ROOM_WORLD_HEIGHT);
+          const verticalFillZoom = viewportHeight / (ROOM_WORLD_HEIGHT * this.baseCameraZoom);
+          this.maxRoomZoom = Phaser.Math.Clamp(verticalFillZoom * CAMERA_OVERSCAN_AFTER_VERTICAL_FILL, 1.8, MAX_ROOM_ZOOM);
+          this.roomZoom = Phaser.Math.Clamp(this.roomZoom, 1, this.maxRoomZoom);
+          this.cameras.main.setViewport(0, 0, viewportWidth, viewportHeight);
+          this.cameras.main.setZoom(this.baseCameraZoom * this.roomZoom);
+          this.clampCameraCenter();
+        }
+
+        private clampCameraCenter() {
+          const camera = this.cameras.main;
+          const halfViewWidth = camera.width / (2 * camera.zoom);
+          const halfViewHeight = camera.height / (2 * camera.zoom);
+          this.cameraCenter.x = halfViewWidth >= ROOM_WORLD_WIDTH / 2
+            ? ROOM_WORLD_WIDTH / 2
+            : Phaser.Math.Clamp(this.cameraCenter.x, halfViewWidth, ROOM_WORLD_WIDTH - halfViewWidth);
+          this.cameraCenter.y = halfViewHeight >= ROOM_WORLD_HEIGHT / 2
+            ? ROOM_WORLD_HEIGHT / 2
+            : Phaser.Math.Clamp(this.cameraCenter.y, halfViewHeight, ROOM_WORLD_HEIGHT - halfViewHeight);
+          camera.centerOn(this.cameraCenter.x, this.cameraCenter.y);
+        }
+
+        private startPointerGesture(pointer: Phaser.Input.Pointer) {
+          if (this.panelOpen) return;
+          const pointersDown = this.input.manager.pointers.filter((item) => item.isDown).length;
+          if (pointersDown > 1) {
+            this.destination = null;
+            this.panPointerId = null;
+            this.cameraDragging = false;
+            this.gestureHadPinch = true;
+            return;
+          }
+          this.panPointerId = pointer.id;
+          this.panStart = { x: pointer.x, y: pointer.y };
+          this.panLast = { x: pointer.x, y: pointer.y };
+          this.cameraDragging = false;
+          this.gestureHadPinch = false;
+        }
+
+        private movePointerGesture(pointer: Phaser.Input.Pointer) {
+          if (this.panelOpen || this.panPointerId !== pointer.id) return;
+          if (this.input.manager.pointers.filter((item) => item.isDown).length > 1) return;
+          const travelled = Phaser.Math.Distance.Between(this.panStart.x, this.panStart.y, pointer.x, pointer.y);
+          if (!this.cameraDragging && travelled >= CAMERA_PAN_THRESHOLD) {
+            this.cameraDragging = true;
+            this.destination = null;
+          }
+          if (!this.cameraDragging || this.roomZoom <= 1.001) return;
+          const camera = this.cameras.main;
+          this.cameraCenter.x -= (pointer.x - this.panLast.x) / camera.zoom;
+          this.cameraCenter.y -= (pointer.y - this.panLast.y) / camera.zoom;
+          this.panLast = { x: pointer.x, y: pointer.y };
+          this.clampCameraCenter();
+        }
+
+        private finishPointerGesture(pointer: Phaser.Input.Pointer) {
+          const remainingPointer = this.input.manager.pointers.find((item) => item.isDown && item.id !== pointer.id);
+          if (this.gestureHadPinch && remainingPointer) {
+            this.pinchStartDistance = 0;
+            this.panPointerId = remainingPointer.id;
+            this.panStart = { x: remainingPointer.x, y: remainingPointer.y };
+            this.panLast = { x: remainingPointer.x, y: remainingPointer.y };
+            this.cameraDragging = true;
+            return;
+          }
+          const matchesPanPointer = this.panPointerId === pointer.id;
+          const shouldTap = matchesPanPointer && !this.cameraDragging && !this.gestureHadPinch && !this.panelOpen;
+          this.panPointerId = null;
+          this.cameraDragging = false;
+          if (shouldTap) {
+            const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            this.handleRoomTap(new Phaser.Math.Vector2(point.x, point.y));
+          }
+          if (!this.input.manager.pointers.some((item) => item.isDown)) {
+            this.gestureHadPinch = false;
+            this.pinchStartDistance = 0;
+          }
+        }
+
+        private handleRoomTap(point: Phaser.Math.Vector2) {
+          const roomCue = getRoomCue(this.onboardingStep);
+          if (this.onboardingStep === "complete" && this.pet.visible && Math.abs(point.x - this.pet.x) < 45 && Math.abs(point.y - this.pet.y) < 60) {
+            this.openPanel(HOTSPOTS.find((hotspot) => hotspot.id === "guide")!);
+            return;
+          }
+          if (roomCue) {
+            if (this.instructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.instructionPaper.x, this.instructionPaper.y) < 50) {
+              this.openRoomNote(this.onboardingStep === "reveal" ? "reveal" : undefined);
+              return;
+            }
+            if (this.secondInstructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.secondInstructionPaper.x, this.secondInstructionPaper.y) < 50) {
+              this.openRoomNote("adoption");
+              return;
+            }
+            const direct = HOTSPOTS.find((hotspot) => getPanelAccess(this.onboardingStep, hotspot.id) !== "locked" && insideHotspot(point.x, point.y, hotspot));
+            if (direct) {
+              this.openPanel(direct);
+              return;
+            }
+            this.setWalkDestination(point);
+            return;
+          }
+          if (this.onboardingStep !== "complete") {
+            if (this.onboardingStep === "net") {
+              this.setWalkDestination(point);
+              return;
+            }
+            const introSpot = this.getCurrentIntroductionHotspot();
+            if (introSpot && Phaser.Math.Distance.Between(
+              point.x, point.y, introSpot.clickX ?? introSpot.x, introSpot.clickY ?? introSpot.y,
+            ) < (introSpot.clickRadius ?? introSpot.radius)) {
+              this.performIntroductionAction(introSpot.action);
+              return;
+            }
+            this.setWalkDestination(point);
+            return;
+          }
+          const direct = HOTSPOTS.find((hotspot) => insideHotspot(point.x, point.y, hotspot));
+          if (direct) {
+            this.openPanel(direct);
+            return;
+          }
+          this.setWalkDestination(point);
+        }
+
+        private performCurrentInteraction() {
+          if (this.panelOpen) return;
+          const roomCue = getRoomCue(this.onboardingStep);
+          if (roomCue) {
+            const papers: Array<{ note: FinalNote; paper: Phaser.GameObjects.Container }> = [
+              { note: "reveal", paper: this.instructionPaper },
+              { note: "adoption", paper: this.secondInstructionPaper },
+            ];
+            const nearbyPaper = this.onboardingStep === "reveal" ? papers
+              .filter(({ paper }) => paper.visible)
+              .sort((a, b) => Phaser.Math.Distance.Between(this.hero.x, this.hero.y, a.paper.x, a.paper.y) - Phaser.Math.Distance.Between(this.hero.x, this.hero.y, b.paper.x, b.paper.y))[0]
+              : this.onboardingStep === "companion" && this.instructionPaper.visible ? { note: undefined, paper: this.instructionPaper } : null;
+            if (nearbyPaper && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearbyPaper.paper.x, nearbyPaper.paper.y) < 130) {
+              this.openRoomNote(nearbyPaper.note);
+            } else if (this.nearest) {
+              this.openPanel(this.nearest);
+            }
+            return;
+          }
+          if (this.onboardingStep === "net") {
+            this.sweepNet();
+            return;
+          }
+          if (this.onboardingStep !== "complete") {
+            if (this.introNearest) this.performIntroductionAction(this.introNearest.action);
+            return;
+          }
+          if (this.nearest) this.openPanel(this.nearest);
+        }
+
         private setWalkDestination(point: Phaser.Math.Vector2) {
           this.destination = canStandAt(point.x, point.y) ? point : null;
         }
@@ -780,19 +924,32 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           }
           const [first, second] = pointers;
           const distance = Phaser.Math.Distance.Between(first.x, first.y, second.x, second.y);
+          const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
           if (!this.pinchStartDistance) {
             this.pinchStartDistance = Math.max(1, distance);
-            this.pinchStartZoom = this.cameras.main.zoom;
+            this.pinchStartRoomZoom = this.roomZoom;
+            const focus = this.cameras.main.getWorldPoint(midpoint.x, midpoint.y);
+            this.pinchFocusWorld = { x: focus.x, y: focus.y };
             this.destination = null;
             this.virtualMove = { x: 0, y: 0 };
+            this.panPointerId = null;
+            this.cameraDragging = false;
+            this.gestureHadPinch = true;
             return true;
           }
-          const zoom = Phaser.Math.Clamp(
-            this.pinchStartZoom * distance / this.pinchStartDistance,
+          this.roomZoom = Phaser.Math.Clamp(
+            this.pinchStartRoomZoom * distance / this.pinchStartDistance,
             1,
-            1.8,
+            this.maxRoomZoom,
           );
-          this.cameras.main.setZoom(zoom).centerOn(768, 512);
+          const camera = this.cameras.main;
+          camera.setZoom(this.baseCameraZoom * this.roomZoom);
+          this.cameraCenter.x = this.pinchFocusWorld.x - (midpoint.x - camera.width / 2) / camera.zoom;
+          this.cameraCenter.y = this.pinchFocusWorld.y - (midpoint.y - camera.height / 2) / camera.zoom;
+          if (this.roomZoom <= 1.001) {
+            this.cameraCenter = { x: ROOM_WORLD_WIDTH / 2, y: ROOM_WORLD_HEIGHT / 2 };
+          }
+          this.clampCameraCenter();
           return true;
         }
 
@@ -822,18 +979,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           const roomCue = getRoomCue(this.onboardingStep);
           if (roomCue) {
             this.refreshFurnitureProximity();
-            if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) {
-              const papers: Array<{ note: FinalNote; paper: Phaser.GameObjects.Container }> = [
-                { note: "reveal", paper: this.instructionPaper },
-                { note: "adoption", paper: this.secondInstructionPaper },
-              ];
-              const nearbyPaper = this.onboardingStep === "reveal" ? papers
-                .filter(({ paper }) => paper.visible)
-                .sort((a, b) => Phaser.Math.Distance.Between(this.hero.x, this.hero.y, a.paper.x, a.paper.y) - Phaser.Math.Distance.Between(this.hero.x, this.hero.y, b.paper.x, b.paper.y))[0]
-                : this.onboardingStep === "companion" && this.instructionPaper.visible ? { note: undefined, paper: this.instructionPaper } : null;
-              if (nearbyPaper && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearbyPaper.paper.x, nearbyPaper.paper.y) < 130) this.openRoomNote(nearbyPaper.note);
-              else if (this.nearest) this.openPanel(this.nearest);
-            }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.performCurrentInteraction();
             return;
           }
           if (this.onboardingStep !== "complete") {
@@ -842,8 +988,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
               window.dispatchEvent(new CustomEvent("life-room:proximity", { detail: null }));
             }
             this.refreshIntroductionProximity();
-            if (this.onboardingStep === "net" && Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.sweepNet();
-            else if (this.introNearest && Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.performIntroductionAction(this.introNearest.action);
+            if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.performCurrentInteraction();
             return;
           }
           if (this.introNearest || this.introPrompt) {
@@ -852,20 +997,20 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             window.dispatchEvent(new CustomEvent("life-room:onboarding-proximity", { detail: null }));
           }
           this.refreshFurnitureProximity();
-          if (this.nearest && Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.openPanel(this.nearest);
+          if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.performCurrentInteraction();
         }
       }
 
       gameRef.current = new Phaser.Game({
         type: Phaser.AUTO,
         parent: hostRef.current,
-        width: 1536,
-        height: 1024,
+        width: hostRef.current.clientWidth || ROOM_WORLD_WIDTH,
+        height: hostRef.current.clientHeight || ROOM_WORLD_HEIGHT,
         backgroundColor: "#2f2841",
         scene: DreamRoomScene,
         transparent: false,
         render: { antialias: true, pixelArt: false, roundPixels: false },
-        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 1536, height: 1024 },
+        scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
       });
     }
 
@@ -877,5 +1022,5 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
     };
   }, []);
 
-  return <div className="room-game" ref={hostRef} aria-label="Interactive diary room. Use WASD, Arrow Keys, the touch joystick, or tap to move. Pinch with two fingers to zoom. Use E or tap an object to interact." />;
+  return <div className="room-game" ref={hostRef} aria-label="Interactive diary room. Use WASD, Arrow Keys, the touch joystick, or tap to move. Pinch with two fingers to zoom, then drag the enlarged room within its boundaries. Use E or tap an object to interact." />;
 }
