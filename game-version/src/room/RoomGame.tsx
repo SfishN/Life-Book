@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { FinalNote, FinalNotesRead, GuidanceMode, OnboardingStep } from "@/domain/onboarding";
+import { FINAL_NOTE_ORDER, type FinalNote, type FinalNotesRead, type GuidanceMode, type OnboardingStep } from "@/domain/onboarding";
 import type { HeroProfile, PanelId, RoomAtmosphere } from "@/domain/types";
 import { getMoodPreset } from "@/domain/mood";
 import { getPanelAccess, getRoomCue } from "@/onboarding/roomCues";
@@ -24,6 +24,11 @@ const HERO_WALK_FRAMES = [1, 2, 3, 2] as const;
 const CROW_SPRITE_SCALE = 0.34;
 const ROOM_WALK_SPEED = 300;
 const INTRODUCTION_WALK_SPEED = 420;
+const FINAL_PAPER_POSITIONS: Record<FinalNote, readonly [number, number]> = {
+  reveal: [590, 790],
+  crow: [765, 790],
+  adoption: [940, 790],
+};
 const ROOM_WORLD_WIDTH = 1536;
 const ROOM_WORLD_HEIGHT = 1024;
 const CAMERA_PAN_THRESHOLD = 10;
@@ -191,8 +196,10 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private instructionGlow!: Phaser.GameObjects.Image;
         private instructionPaper!: Phaser.GameObjects.Container;
         private secondInstructionPaper!: Phaser.GameObjects.Container;
+        private thirdInstructionPaper!: Phaser.GameObjects.Container;
+        private finalPapers!: Record<FinalNote, Phaser.GameObjects.Container>;
         private hotspotRings: Array<{ id: PanelId; ring: Phaser.GameObjects.Ellipse }> = [];
-        private finalNotesRead: FinalNotesRead = { reveal: false, adoption: false };
+        private finalNotesRead: FinalNotesRead = { reveal: false, crow: false, adoption: false };
         private envelope!: Phaser.GameObjects.Sprite;
         private leafNote!: Phaser.GameObjects.Image;
         private net!: Phaser.GameObjects.Sprite;
@@ -300,6 +307,10 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           const secondFoldedPaper = this.add.rectangle(0, 0, 54, 36, 0xf2dfbf).setRotation(0.11).setStrokeStyle(2, 0x7b5c69, 0.8);
           const secondPaperMark = this.add.text(0, 0, "○", { fontFamily: "Georgia, serif", fontSize: "19px", color: "#704656" }).setOrigin(0.5);
           this.secondInstructionPaper = this.add.container(0, 0, [secondFoldedPaper, secondPaperMark]).setDepth(1000).setVisible(false);
+          const thirdFoldedPaper = this.add.rectangle(0, 0, 54, 36, 0xf2dfbf).setRotation(-0.08).setStrokeStyle(2, 0x7b5c69, 0.8);
+          const thirdPaperMark = this.add.text(0, 0, "△", { fontFamily: "Georgia, serif", fontSize: "19px", color: "#35404c" }).setOrigin(0.5);
+          this.thirdInstructionPaper = this.add.container(0, 0, [thirdFoldedPaper, thirdPaperMark]).setDepth(1000).setVisible(false);
+          this.finalPapers = { reveal: this.instructionPaper, crow: this.secondInstructionPaper, adoption: this.thirdInstructionPaper };
           this.memoryGlow = this.add.particles(315, 455, "memory-speck", {
             lifespan: { min: 1800, max: 3200 },
             speedY: { min: -18, max: -6 },
@@ -411,7 +422,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private applyOnboardingState() {
           if (!this.envelope) return;
           this.tweens.killTweensOf([this.envelope, this.windowMark, this.leafNote, this.footprints]);
-          this.tweens.killTweensOf([this.pet, this.instructionGlow, this.instructionPaper, this.secondInstructionPaper]);
+          this.tweens.killTweensOf([this.pet, this.instructionGlow, this.instructionPaper, this.secondInstructionPaper, this.thirdInstructionPaper]);
           this.envelope.setVisible(this.onboardingStep === "envelope").setFrame(0).setScale(0.255).setAlpha(1);
           this.leafNote.setVisible(this.onboardingStep === "window").setAlpha(1);
           this.windowMark.setVisible(this.onboardingStep === "window" || this.onboardingStep === "net").setAlpha(1);
@@ -439,20 +450,31 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           const roomCue = getRoomCue(this.onboardingStep);
           for (const { id, ring } of this.hotspotRings) ring.setVisible(getPanelAccess(this.onboardingStep, id) !== "locked");
           this.instructionGlow.setVisible(Boolean(roomCue));
-          this.instructionPaper.setVisible(Boolean(roomCue) && (this.onboardingStep !== "reveal" || !this.finalNotesRead.reveal));
-          this.secondInstructionPaper.setVisible(this.onboardingStep === "reveal" && !this.finalNotesRead.adoption);
+          if (this.onboardingStep === "reveal") {
+            for (const note of FINAL_NOTE_ORDER) {
+              this.finalPapers[note].setVisible(true).setPosition(...FINAL_PAPER_POSITIONS[note]).setScale(1.3).setAlpha(this.finalNotesRead[note] ? 0.62 : 1);
+            }
+          } else {
+            this.instructionPaper.setVisible(Boolean(roomCue)).setScale(1);
+            this.secondInstructionPaper.setVisible(false);
+            this.thirdInstructionPaper.setVisible(false);
+          }
           if (roomCue) {
             this.instructionGlow.setPosition(...roomCue.glow).setAlpha(0.45);
-            this.instructionPaper.setPosition(...roomCue.paper).setAlpha(1);
-            if (this.onboardingStep === "reveal") this.secondInstructionPaper.setPosition(...getRoomCue("adoption")!.paper).setAlpha(1);
+            if (this.onboardingStep !== "reveal") this.instructionPaper.setPosition(...roomCue.paper).setAlpha(1);
             this.footprints.setVisible(false);
             this.threateningShadow.setVisible(false).setAlpha(0);
             if (this.reducedMotion) this.pet.setPosition(...roomCue.crow).setAlpha(0.92);
             else {
               this.tweens.add({ targets: this.pet, x: roomCue.crow[0], y: roomCue.crow[1], alpha: 0.92, duration: 900, ease: "Sine.easeInOut" });
               this.tweens.add({ targets: this.instructionGlow, alpha: 0.7, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-              if (this.instructionPaper.visible) this.tweens.add({ targets: this.instructionPaper, y: roomCue.paper[1] - 6, duration: 1000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-              if (this.secondInstructionPaper.visible) this.tweens.add({ targets: this.secondInstructionPaper, y: getRoomCue("adoption")!.paper[1] - 6, duration: 1150, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+              if (this.onboardingStep === "reveal") {
+                FINAL_NOTE_ORDER.forEach((note, index) => {
+                  if (!this.finalNotesRead[note]) this.tweens.add({ targets: this.finalPapers[note], y: FINAL_PAPER_POSITIONS[note][1] - 6, duration: 1000 + index * 120, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+                });
+              } else if (this.instructionPaper.visible) {
+                this.tweens.add({ targets: this.instructionPaper, y: roomCue.paper[1] - 6, duration: 1000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+              }
             }
           } else if (this.onboardingStep === "complete") this.applyGuidanceAppearance();
           else if (this.onboardingStep !== "mirror") {
@@ -788,12 +810,16 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             return;
           }
           if (roomCue) {
-            if (this.instructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.instructionPaper.x, this.instructionPaper.y) < 50) {
-              this.openRoomNote(this.onboardingStep === "reveal" ? "reveal" : undefined);
-              return;
-            }
-            if (this.secondInstructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.secondInstructionPaper.x, this.secondInstructionPaper.y) < 50) {
-              this.openRoomNote("adoption");
+            if (this.onboardingStep === "reveal") {
+              for (const note of FINAL_NOTE_ORDER) {
+                const paper = this.finalPapers[note];
+                if (Phaser.Math.Distance.Between(point.x, point.y, paper.x, paper.y) < 65) {
+                  this.openRoomNote(note);
+                  return;
+                }
+              }
+            } else if (this.instructionPaper.visible && Phaser.Math.Distance.Between(point.x, point.y, this.instructionPaper.x, this.instructionPaper.y) < 50) {
+              this.openRoomNote();
               return;
             }
             const direct = HOTSPOTS.find((hotspot) => getPanelAccess(this.onboardingStep, hotspot.id) !== "locked" && insideHotspot(point.x, point.y, hotspot));
@@ -831,12 +857,8 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           if (this.panelOpen) return;
           const roomCue = getRoomCue(this.onboardingStep);
           if (roomCue) {
-            const papers: Array<{ note: FinalNote; paper: Phaser.GameObjects.Container }> = [
-              { note: "reveal", paper: this.instructionPaper },
-              { note: "adoption", paper: this.secondInstructionPaper },
-            ];
-            const nearbyPaper = this.onboardingStep === "reveal" ? papers
-              .filter(({ paper }) => paper.visible)
+            const nearbyPaper = this.onboardingStep === "reveal" ? FINAL_NOTE_ORDER
+              .map((note) => ({ note, paper: this.finalPapers[note] }))
               .sort((a, b) => Phaser.Math.Distance.Between(this.hero.x, this.hero.y, a.paper.x, a.paper.y) - Phaser.Math.Distance.Between(this.hero.x, this.hero.y, b.paper.x, b.paper.y))[0]
               : this.onboardingStep === "companion" && this.instructionPaper.visible ? { note: undefined, paper: this.instructionPaper } : null;
             if (nearbyPaper && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearbyPaper.paper.x, nearbyPaper.paper.y) < 130) {

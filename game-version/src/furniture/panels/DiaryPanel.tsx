@@ -150,7 +150,7 @@ function DiaryEditor({
             ))}
           </div>
         </fieldset>
-        {guided && <div className="diary-handwritten-cue" aria-label="Notes from two writers"><p className="line-a"><span className="writer-mark writer-a" aria-hidden="true">○</span> Keep one moment here. Choose how it felt.</p><p className="line-b"><span className="writer-mark writer-b" aria-hidden="true">△</span> Only Save changes the room light.</p></div>}
+        {guided && <div className="diary-handwritten-cue" aria-label="Notes from two writers"><p className="line-a">Write down one thing that happened today. The room needs to know what belongs to which time.</p><p className="line-b">Leave only what you are willing to keep. You choose the light as well.</p></div>}
         <label>Diary title
           <span className="input-with-count">
             <input value={draft.title} maxLength={50} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="A short title for today..." />

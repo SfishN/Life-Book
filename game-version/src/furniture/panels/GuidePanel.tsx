@@ -110,7 +110,7 @@ export function GuidePanel({ onClose, guided = false }: GuidePanelProps) {
           </div>
 
           <div className="crow-compose">
-            {guided && <div className="crow-guided-writing" aria-label="Notes from two writers"><p className="line-a">○ Ask it one question.</p><p className="line-b">△ Room memories are shared only if you choose.</p></div>}
+            {guided && <div className="crow-guided-writing" aria-label="Notes from two writers"><p className="line-a">You can ask it one question. It is good at remembering what it is allowed to know.</p><p className="line-b">I have to admit, it&apos;s really cute... But I don&apos;t agree with eight legs! Never ever.</p></div>}
             {error && <p className="crow-error" role="alert">{error}</p>}
             <form className="crow-input" onSubmit={submit}>
               <label className="sr-only" htmlFor="crow-message">Say something to the little crow</label>

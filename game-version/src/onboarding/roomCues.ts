@@ -14,38 +14,38 @@ interface RoomCue {
 export const ROOM_CUES = {
   diary: {
     object: "Bookshelf", panel: "diary", glow: [320, 455], paper: [320, 525], crow: [340, 300],
-    round: "Something happened today. Keep it here?",
-    sharp: "Write only what you want to keep.",
+    round: "Write down one thing that happened today. The room needs to know what belongs to which time.",
+    sharp: "Leave only what you are willing to keep. You choose the light as well.",
   },
   skills: {
     object: "Plant", panel: "skills", glow: [405, 710], paper: [530, 795], crow: [455, 660],
-    round: "A little practice can grow.",
-    sharp: "Leave a record of what you actually did.",
+    round: "Do it a few more times and it becomes a habit later.",
+    sharp: "Do not pass off the ending as the process. Leave a practice record first.",
   },
   profile: {
-    object: "Bed", panel: "hero", glow: [790, 520], paper: [655, 730], crow: [835, 525],
-    round: "What should this room call you?",
-    sharp: "A name can always be changed.",
+    object: "Bed", panel: "hero", glow: [790, 520], paper: [800, 595], crow: [835, 525],
+    round: "At least tell the room what to call you.",
+    sharp: "Write the name. The room keeps things longer than people do.",
   },
   achievements: {
     object: "Achievement wall", panel: "achievements", glow: [1000, 550], paper: [975, 355], crow: [1010, 500],
-    round: "This frame could hold a moment.",
-    sharp: "Only you decide what to pin.",
+    round: "This wall will be full later.",
+    sharp: "If the person living now chooses to pin anything to it.",
   },
   novel: {
     object: "Desk", panel: "novel", glow: [1170, 545], paper: [1235, 545], crow: [1130, 485],
-    round: "These days might belong together.",
-    sharp: "Choose the sources before a chapter is written.",
+    round: "Put them together. The chapter will be super good.",
+    sharp: "You should know that the one in the middle doesn't have to write it.",
   },
   companion: {
-    object: "Little Crow", panel: null, glow: [430, 645], paper: [520, 700], crow: [430, 625],
-    round: "It has been following us.",
-    sharp: "It will listen when the room is ready.",
+    object: "Little Crow", panel: "guide", glow: [430, 645], paper: [520, 700], crow: [430, 625],
+    round: "You can ask it one question. It is good at remembering what it is allowed to know.",
+    sharp: "I have to admit, it's really cute... But I don't agree with eight legs! Never ever.",
   },
   reveal: {
-    object: "A folded page", panel: null, glow: [1100, 605], paper: [950, 735], crow: [1100, 525],
+    object: "Three folded pages", panel: null, glow: [765, 775], paper: [590, 790], crow: [765, 685],
     round: "The two hands have one more thing to say.",
-    sharp: "This time, read both sides.",
+    sharp: "There is more on each page.",
   },
   adoption: {
     object: "Little Crow", panel: null, glow: [755, 735], paper: [755, 805], crow: [755, 700],
@@ -74,7 +74,7 @@ const PANEL_UNLOCKS_AFTER: Record<PanelId, OnboardingStep> = {
   hero: "achievements",
   achievements: "novel",
   novel: "companion",
-  guide: "complete",
+  guide: "reveal",
 };
 
 export function getPanelAccess(step: OnboardingStep, panel: PanelId): PanelAccess {

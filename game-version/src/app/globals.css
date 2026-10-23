@@ -1411,6 +1411,11 @@ button:disabled {
   overflow: visible;
 }
 
+.story-note-window .story-note-copy {
+  max-height: 72vh;
+  overflow: auto;
+}
+
 .handwriting {
   position: relative;
   margin: 13px 0;
@@ -2935,7 +2940,6 @@ button.list-row { cursor: pointer; }
   backdrop-filter: blur(8px);
 }
 
-.room-paper-shortcut span { margin-right: 7px; font-family: Georgia, serif; }
 .room-paper-shortcut:hover { background: rgba(78, 53, 79, 0.9); }
 .room-paper-shortcut:focus-visible { outline: 2px solid #fff4da; outline-offset: 2px; }
 
@@ -2984,7 +2988,7 @@ button.list-row { cursor: pointer; }
 .room-paper-writing p { margin: 0; line-height: 1.42; }
 .room-paper-writing .line-a { font-size: clamp(1.12rem, 2vw, 1.5rem); }
 .room-paper-writing .line-b { font-size: clamp(0.82rem, 1.35vw, 1.05rem); }
-.room-paper-story .room-paper-writing { gap: 15px; }
+.room-paper-story .room-paper-writing { gap: 10px; }
 .room-paper-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
 
 .panel-handwritten-cue,
@@ -3039,7 +3043,7 @@ button.list-row { cursor: pointer; }
     transform: translate(-50%, -50%) rotate(-0.5deg);
   }
   .room-paper-writing { gap: 9px; }
-  .room-paper-story .room-paper-writing { gap: 12px; }
+  .room-paper-story .room-paper-writing { gap: 8px; }
 }
 
 @media (max-width: 620px), (pointer: coarse) {

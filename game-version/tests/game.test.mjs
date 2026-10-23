@@ -34,6 +34,7 @@ const { commitDiary, validateDiary } = await import("../src/domain/diary.ts");
 const { MOOD_OPTIONS, MOOD_PRESETS, normalizeMood, getMoodPreset } = await import("../src/domain/mood.ts");
 const { useLifeRoomStore: store, GAME_STORAGE_KEY, getLifeRoomSnapshot, guideMessagesForToday } = await import("../src/store/useLifeRoomStore.ts");
 const {
+  FINAL_NOTE_ORDER,
   ONBOARDING_STORAGE_KEY,
   createOnboardingState,
   markFinalNoteRead,
@@ -327,24 +328,29 @@ test("finished furniture opens during the remaining introduction while later fur
   assert.equal(getPanelAccess("achievements", "hero"), "open");
   assert.equal(getPanelAccess("novel", "achievements"), "open");
   assert.equal(getPanelAccess("companion", "novel"), "open");
-  assert.equal(getPanelAccess("reveal", "guide"), "locked");
+  assert.equal(getPanelAccess("companion", "guide"), "explore");
+  assert.equal(getPanelAccess("reveal", "guide"), "open");
   for (const panel of ["diary", "skills", "hero", "achievements", "novel", "guide"]) {
     assert.equal(getPanelAccess("complete", panel), "open");
   }
 });
 
-test("the two final notes can be read and restored in either order", () => {
-  for (const first of ["reveal", "adoption"]) {
-    const second = first === "reveal" ? "adoption" : "reveal";
-    const started = moveOnboardingTo(createOnboardingState(), "reveal");
-    const oneRead = markFinalNoteRead(started, first);
-    writeOnboardingState(testStorage, oneRead);
-    const restored = readOnboardingState(testStorage);
-    assert.equal(restored.finalNotesRead[first], true);
-    assert.equal(restored.finalNotesRead[second], false);
-    const bothRead = markFinalNoteRead(restored, second);
-    assert.deepEqual(bothRead.finalNotesRead, { reveal: true, adoption: true });
+test("three final notes can be read from their positions in any order", () => {
+  assert.deepEqual(FINAL_NOTE_ORDER, ["reveal", "crow", "adoption"]);
+  let progress = moveOnboardingTo(createOnboardingState(), "reveal");
+  for (const note of ["adoption", "reveal", "crow"]) {
+    progress = markFinalNoteRead(progress, note);
+    writeOnboardingState(testStorage, progress);
+    progress = readOnboardingState(testStorage);
+    assert.equal(progress.finalNotesRead[note], true);
   }
+  assert.ok(FINAL_NOTE_ORDER.every((note) => progress.finalNotesRead[note]));
+});
+
+test("older two-letter progress preserves both read letters", () => {
+  saved.set(ONBOARDING_STORAGE_KEY, JSON.stringify({ ...moveOnboardingTo(createOnboardingState(), "reveal"), finalNotesRead: { reveal: true, adoption: true } }));
+  const restored = readOnboardingState(testStorage);
+  assert.deepEqual(restored.finalNotesRead, { reveal: true, crow: false, adoption: true });
 });
 
 test("onboarding contains the approved sequential function and reveal stages", () => {
@@ -354,10 +360,14 @@ test("onboarding contains the approved sequential function and reveal stages", (
   }
   const overlay = readFileSync(path.join(root, "src/onboarding/IntroductionOverlay.tsx"), "utf8");
   const app = readFileSync(path.join(root, "src/components/LifeRoomApp.tsx"), "utf8");
-  assert.match(overlay, /Eight legs\. That was the number\./);
-  assert.match(overlay, /I am in your future\./);
-  assert.match(overlay, /I am in your past\./);
+  assert.match(overlay, /Eight legs\. That was the number of legs\./);
+  assert.match(overlay, /I am living in the future\./);
+  assert.match(overlay, /I am in the past\./);
   assert.match(overlay, /The one in the middle will raise the little thing\./);
+  assert.match(overlay, /When the light breaks, catch the fireflies\./);
+  assert.match(overlay, /Would you like to raise it\?/);
+  assert.match(overlay, /Meet the little crow/);
+  assert.match(app, /companion: "guide"/);
   assert.doesNotMatch(overlay, /—A|—B/);
   assert.match(app, /Reset introduction/);
   assert.doesNotMatch(app, /Reset Life Room records/);

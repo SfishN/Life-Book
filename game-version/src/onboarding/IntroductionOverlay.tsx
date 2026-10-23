@@ -27,7 +27,6 @@ interface IntroductionOverlayProps {
   guidanceMode: GuidanceMode;
   onBegin: () => void;
   onContinue: () => void;
-  onAdvance: () => void;
   onExplore: () => void;
   onComplete: () => void;
   onCloseRoomNote: () => void;
@@ -51,12 +50,8 @@ const FUNCTIONS: Array<{
   { id: "guide", object: "Little Crow", name: "AI Companion", copy: "Ask for a brief reflection. Room memories are shared only when you opt in.", icon: Bird },
 ];
 
-function HandMark({ hand }: { hand: "round" | "sharp" }) {
-  return <span className={`writer-mark writer-${hand === "round" ? "a" : "b"}`} aria-hidden="true">{hand === "round" ? "○" : "△"}</span>;
-}
-
 function HandLine({ hand, children }: { hand: "round" | "sharp"; children: React.ReactNode }) {
-  return <p className={hand === "round" ? "line-a" : "line-b"}><HandMark hand={hand} /> {children}</p>;
+  return <p className={hand === "round" ? "line-a" : "line-b"}>{children}</p>;
 }
 
 function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onContinue: () => void }) {
@@ -65,9 +60,9 @@ function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onCo
       <section className="story-note story-note-envelope" role="dialog" aria-modal="true" aria-labelledby="envelope-note-title" tabIndex={-1} autoFocus>
         <Image src="/onboarding/notes/note-paper-overlap.png" alt="" aria-hidden="true" width={1536} height={1024} unoptimized />
         <div className="story-note-copy">
-          <h1 id="envelope-note-title">For the one in the middle</h1>
-          <div className="handwriting handwriting-a"><p>Go to the window.<br />Bring the net.<br />Do not answer anything that knocks.</p></div>
-          <div className="handwriting handwriting-b"><p>Do not go to the window.<br />Do not trust the other hand.<br />If you already moved the net, put it back.</p></div>
+          <h1 id="envelope-note-title">FOR THE ONE IN THE MIDDLE</h1>
+          <div className="handwriting handwriting-a"><p>Go to the window.<br />Do not answer anything that knocks.</p></div>
+          <div className="handwriting handwriting-b"><p>Do not go to the window.<br />Do not trust the other hand.</p></div>
           <button className="primary-button" type="button" onClick={onContinue}>Fold the paper</button>
         </div>
       </section>
@@ -79,8 +74,8 @@ function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onCo
       <section className="story-note story-note-window" role="dialog" aria-modal="true" aria-label="Window note" tabIndex={-1} autoFocus>
         <Image src="/onboarding/notes/leaf-note.png" alt="" aria-hidden="true" width={1536} height={1024} unoptimized />
         <div className="story-note-copy">
-          <div className="handwriting handwriting-b"><p>You trusted him.<br />He has the ending. That does not mean he knows how it began.</p></div>
-          <div className="handwriting handwriting-a"><p>When the light breaks, catch what crosses.<br />Do not count aloud.</p></div>
+          <div className="handwriting handwriting-b"><p>Why you trusted him?<br />Although he has the ending, it does not mean he knows how it began.<br />He is such a crazy person.</p></div>
+          <div className="handwriting handwriting-a"><p>When the light breaks, catch the fireflies.<br />Bring the net.</p></div>
           <button className="primary-button" type="button" onClick={onContinue}>Take the net</button>
         </div>
       </section>
@@ -94,17 +89,16 @@ function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onCo
         <HandLine hand="sharp">How many did you take?</HandLine>
         <HandLine hand="round">I&apos;m not sure. Eight?</HandLine>
         <HandLine hand="sharp">You do not know?</HandLine>
-        <HandLine hand="round">Not from here.</HandLine>
-        <HandLine hand="sharp">Then why is one still in the room?</HandLine>
+        <HandLine hand="round">Not in my time anymore.</HandLine>
+        <HandLine hand="sharp">Why there is one in my room?</HandLine>
         <button className="primary-button" type="button" onClick={onContinue}>Follow the small shadow</button>
       </div>
     </section>
   );
 }
 
-function RoomPaper({ step, activeFinalNote, onCloseRoomNote, onAdvance, onExplore, onReadFinalNote }: Pick<IntroductionOverlayProps, "step" | "activeFinalNote" | "onCloseRoomNote" | "onAdvance" | "onExplore" | "onReadFinalNote">) {
-  const noteStep = activeFinalNote ?? step;
-  const cue = getRoomCue(noteStep);
+function RoomPaper({ step, activeFinalNote, onCloseRoomNote, onExplore, onReadFinalNote }: Pick<IntroductionOverlayProps, "step" | "activeFinalNote" | "onCloseRoomNote" | "onExplore" | "onReadFinalNote">) {
+  const cue = getRoomCue(step);
   if (!cue) return null;
   const story = activeFinalNote !== null;
 
@@ -113,30 +107,43 @@ function RoomPaper({ step, activeFinalNote, onCloseRoomNote, onAdvance, onExplor
       <button className="room-paper-close" type="button" onClick={onCloseRoomNote} aria-label="Fold the note"><X size={18} /></button>
       <div className="room-paper-writing">
         {!story && <><HandLine hand="round">{cue.round}</HandLine><HandLine hand="sharp">{cue.sharp}</HandLine></>}
-        {step === "companion" && <><HandLine hand="sharp">There. Eight legs. That was the number.</HandLine><HandLine hand="round">It looks better when it moves.</HandLine><HandLine hand="sharp">At last, you have supplied a unit.</HandLine></>}
+        {step === "companion" && <><HandLine hand="sharp">There. Eight legs. That was the number of legs.</HandLine><HandLine hand="round">It looks better when it moves.</HandLine><HandLine hand="sharp">Are you serious?</HandLine></>}
         {activeFinalNote === "reveal" && <>
-          <HandLine hand="sharp">Tell the one in the middle why you always know the result.</HandLine>
-          <HandLine hand="round">By the time I write this, your “today” has been over for a very long time. I am in your future.</HandLine>
-          <HandLine hand="sharp">When I write this, your “today” has not happened yet. I am in your past.</HandLine>
-          <HandLine hand="round">This room lets our writing fall into the same present.</HandLine>
-          <HandLine hand="sharp">He has been using it to send things backward.</HandLine>
+          <HandLine hand="sharp">Let&apos;s reveal the secrets of the room.<br />Tell the one in the middle why you always know the result.</HandLine>
+          <HandLine hand="round">Are you sure? You insisted we could not tell them before.</HandLine>
+          <HandLine hand="sharp">Come! Take easy FUTURE BOY, I just wanted to make a joke with the middle one.</HandLine>
+          <HandLine hand="round">OLD FOSSIL, I guess the middle one must be more mature than you.</HandLine>
+          <HandLine hand="sharp">No way, I&apos;m the oldest. Literally, MOST MATURE.</HandLine>
+          <HandLine hand="round">Fine. Here is the truth.<br />By the time I write this, your “today” has been over for a very long time.<br />I am living in the future.</HandLine>
+          <HandLine hand="sharp">When I write this, your “today” has not happened yet.<br />I am in the past.</HandLine>
+          <HandLine hand="round">This room lets our existing fall into the same present.</HandLine>
+        </>}
+        {activeFinalNote === "crow" && <>
+          <HandLine hand="sharp">He has been using it to send things backward. That little crow.<br />Actually, artificial intelligence.</HandLine>
           <HandLine hand="round">Research requires experiments.</HandLine>
           <HandLine hand="sharp">Research does not usually run around someone else&apos;s feet.</HandLine>
+          <HandLine hand="round">I can&apos;t control cro-cro&apos;s time position.</HandLine>
+          <HandLine hand="sharp">I know, I know, its self-awareness, right?<br />Do not call it as cro-cro, its name is Crow Black.</HandLine>
+          <HandLine hand="round">As Snow White?</HandLine>
+          <HandLine hand="sharp">Take it back to your time.</HandLine>
+          <HandLine hand="round">I cannot. It has already chosen to stay in the middle.</HandLine>
+          <HandLine hand="sharp">All right, then let the middle guy raise it?</HandLine>
+          <HandLine hand="round">Make sense.</HandLine>
         </>}
         {activeFinalNote === "adoption" && <>
-          <HandLine hand="sharp">Take it back to your time.</HandLine>
-          <HandLine hand="round">I cannot. It has already chosen to stay.</HandLine>
-          <HandLine hand="sharp">You raised it.</HandLine>
-          <HandLine hand="round">You told the one in the middle to pick up the net.</HandLine>
-          <HandLine hand="sharp">Because you sent it here.</HandLine>
-          <HandLine hand="round">Then we are jointly responsible.</HandLine>
-          <HandLine hand="sharp">The one in the middle will raise the little thing.</HandLine>
-          <HandLine hand="round">Their bird.</HandLine>
+          <HandLine hand="round">It cannot go back, and it has chosen the middle.<br />Would you like to raise it?</HandLine>
+          <HandLine hand="sharp">Take care with our Crow Black.</HandLine>
+          <HandLine hand="round">You can name it as you like.</HandLine>
+          <HandLine hand="sharp">Yes, your bird.</HandLine>
+          <HandLine hand="sharp">The one in the middle will raise the little thing.<br />Do not let it touch the envelope. Do not let it peck the clock.</HandLine>
+          <HandLine hand="round">And do not worry too much about what he says.<br />He thought even the window was too modern.</HandLine>
+          <HandLine hand="sharp">And you raised a bird that cannot find its way home.</HandLine>
+          <HandLine hand="round">That is why it needs one.</HandLine>
         </>}
       </div>
       <div className="room-paper-actions">
         {activeFinalNote ? <button className="primary-button" type="button" onClick={() => onReadFinalNote(activeFinalNote)}>Finish reading</button>
-          : step === "companion" ? <button className="primary-button" type="button" onClick={onAdvance}>Follow the folded notes</button>
+          : step === "companion" ? <button className="primary-button" type="button" onClick={onExplore}>Meet the little crow</button>
             : cue.panel ? <button className="primary-button" type="button" onClick={onExplore}>Look closer</button>
             : <button className="small-button" type="button" onClick={onCloseRoomNote}>Fold the note</button>}
       </div>
@@ -154,7 +161,7 @@ function FunctionReview({ guidanceMode, onGuidanceMode, onOpenPanel, onComplete 
   );
 }
 
-export function IntroductionOverlay({ note, step, showArrival, showInstruction, reviewMode, activeFinalNote, guidanceMode, onBegin, onContinue, onAdvance, onExplore, onComplete, onCloseRoomNote, onReadFinalNote, onGuidanceMode, onOpenPanel }: IntroductionOverlayProps) {
+export function IntroductionOverlay({ note, step, showArrival, showInstruction, reviewMode, activeFinalNote, guidanceMode, onBegin, onContinue, onExplore, onComplete, onCloseRoomNote, onReadFinalNote, onGuidanceMode, onOpenPanel }: IntroductionOverlayProps) {
   if (note) return <div className="intro-backdrop story-backdrop"><NoteDialog note={note} onContinue={onContinue} /></div>;
 
   if (showArrival) {
@@ -165,7 +172,7 @@ export function IntroductionOverlay({ note, step, showArrival, showInstruction, 
 
   if (showInstruction) {
     if (reviewMode) return <div className="intro-backdrop function-backdrop"><FunctionReview guidanceMode={guidanceMode} onGuidanceMode={onGuidanceMode} onOpenPanel={onOpenPanel} onComplete={onComplete} /></div>;
-    return <RoomPaper step={step} activeFinalNote={activeFinalNote} onCloseRoomNote={onCloseRoomNote} onAdvance={onAdvance} onExplore={onExplore} onReadFinalNote={onReadFinalNote} />;
+    return <RoomPaper step={step} activeFinalNote={activeFinalNote} onCloseRoomNote={onCloseRoomNote} onExplore={onExplore} onReadFinalNote={onReadFinalNote} />;
   }
 
   return null;

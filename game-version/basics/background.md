@@ -105,14 +105,12 @@ The front reads:
 Inside, in rounded handwriting:
 
 > Go to the window.  
-> Bring the net.  
 > Do not answer anything that knocks.
 
 Across the lower edge, in sharp handwriting:
 
 > Do not go to the window.  
 > Do not trust the other hand.  
-> If you already moved the net, put it back.
 
 There are no signatures or letter labels on the envelope.
 
@@ -126,13 +124,14 @@ A thin glowing mark appears on the window. It resembles a seal or incomplete let
 
 A leaf rests against the glass. In sharp handwriting:
 
-> You trusted him.  
-> He has the ending. That does not mean he knows how it began.
+> Why you trusted him?  
+> Although he has the ending, it does not mean he knows how it began.
+> He is such a crazy person.
 
 A tag is tied to the net:
 
-> When the light breaks, catch what crosses.  
-> Do not count aloud.
+> When the light breaks, catch the fireflies.  
+> Bring the net.
 
 The player equips the net. The glowing mark fractures into moving points that resemble birds as they cross the room.
 
@@ -164,11 +163,11 @@ Sharp handwriting:
 
 Rounded handwriting:
 
-> Not from here.
+> Not in my time anymore.
 
 Sharp handwriting:
 
-> Then why is one still in the room?
+> Why there is one in my room?
 
 “Eight” has no unit. It may sound like a number of people, missing persons, objects, or experiment records. At this point, the player cannot know what the writers counted.
 
@@ -181,7 +180,7 @@ The little crow takes a blank piece of paper and flies to the bookshelf.
 Rounded handwriting:
 
 > Write down one thing that happened today.  
-> The room needs to know what belongs to now.
+> The room needs to know what belongs to which time.
 
 Sharp handwriting:
 
@@ -207,11 +206,11 @@ The player may use a neutral practice sentence or close the Diary without sharin
 
 Rounded handwriting:
 
-> I knew the shelf would end up like this.
+> I knew the shelf would end up empty for recording.
 
 Sharp handwriting:
 
-> You are talking about a result that has not finished happening again.
+> You are talking about a result that has not happened yet again.
 
 This is the second clue that the rounded hand has seen later outcomes.
 
@@ -245,11 +244,11 @@ The little crow drags a blank label from beside the bed.
 
 Rounded handwriting:
 
-> At least tell the room what to call you now.
+> At least tell the room what to call you.
 
 Sharp handwriting:
 
-> Write the name lightly.  
+> Write the name.  
 > The room keeps things longer than people do.
 
 The player is introduced to:
@@ -291,11 +290,11 @@ Several records appear in the centre of the room in the wrong order.
 
 Rounded handwriting:
 
-> Put them together. I remember this chapter being rather good.
+> Put them together. The chapter will be super good.
 
 Sharp handwriting:
 
-> You remember it. That does not mean the one in the middle has to write it that way.
+> You should know that the one in the middle doesn't have to write it.
 
 The player learns to:
 
@@ -318,7 +317,7 @@ For the first time, the crow is shown as a complete, unobstructed portrait. It s
 Sharp handwriting appears beside the portrait:
 
 > There. Eight legs.  
-> That was the number.
+> That was the number of legs.
 
 Rounded handwriting answers:
 
@@ -326,7 +325,7 @@ Rounded handwriting answers:
 
 Sharp handwriting:
 
-> At last, you have supplied a unit.
+> Are you serious?
 
 This is the payoff to the writing behind the mirror: “eight” referred to the little crow's legs, not people, missing persons, captured creatures, or experiment records. The reveal should be visual first and confirmed by the handwriting immediately afterward. It does not yet reveal which writer belongs to the past or future.
 
@@ -341,8 +340,8 @@ Rounded handwriting:
 
 Sharp handwriting:
 
-> Let it read only the records you choose.  
-> Its conversation clears after midnight.
+> I have to admit, it's really cute...
+> But I don't agree with eight legs! Never ever.
 
 The player may type a first message or close the view immediately.
 
@@ -364,7 +363,8 @@ After every function has been introduced, new writing appears on the back of the
 
 Sharp handwriting:
 
-> That is enough. Tell the one in the middle why you always know the result.
+> Let's reveal the secrets of the room.
+> Tell the one in the middle why you always know the result.
 
 Rounded handwriting:
 
@@ -372,34 +372,35 @@ Rounded handwriting:
 
 Sharp handwriting:
 
-> I insisted that you could not be the one to tell them.
+> Come! Take easy FUTURE BOY, I just wanted to make a joke with the middle one.
 
 Rounded handwriting:
 
-> Old fossil, those are the same sentence.
+> OLD FOSSIL, I guess the middle one must be more mature than you.
 
 Sharp handwriting:
 
-> Perhaps they are, to people from your century.
+> No way, I'm the oldest. Literally, MOST MATURE.
 
 After a pause, the rounded hand writes:
 
 > Fine. Here is the truth.  
 > By the time I write this, your “today” has been over for a very long time.  
-> I am in your future.
+> I am living in the future.
 
 The sharp hand immediately adds:
 
 > When I write this, your “today” has not happened yet.  
-> I am in your past.
+> I am in the past.
 
 Rounded handwriting:
 
-> This room lets our writing fall into the same present.
+> This room lets our existing fall into the same present.
 
 Sharp handwriting:
 
-> He has been using it to send things backward.
+> He has been using it to send things backward. That little crow.
+> Actually, artificial intelligence.
 
 Rounded handwriting:
 
@@ -411,11 +412,15 @@ Sharp handwriting:
 
 Rounded handwriting:
 
-> It simply failed to return as planned.
+> I can't control cro-cro's time position.
 
 Sharp handwriting:
 
-> Because “return” was never part of your plan.
+> I know, I know, its self-awareness, right? 
+> Do not call it as cro-cro, its name is Crow Black.
+
+Rounded handwriting:
+> As Snow White?
 
 ### 5.12 Deciding who will raise the little crow
 
@@ -425,54 +430,41 @@ Sharp handwriting:
 
 Rounded handwriting:
 
-> I cannot. It has already chosen to stay.
+> I cannot. It has already chosen to stay in the middle.
 
 Sharp handwriting:
 
-> You raised it.
+> All right, then let the middle guy raise it?
 
 Rounded handwriting:
 
-> You told the one in the middle to pick up the net.
+> Make sense.
 
-Sharp handwriting:
-
-> Because you sent it here.
-
-Rounded handwriting:
-
-> Then we are jointly responsible.
-
-Sharp handwriting:
-
-> No.
 
 The little crow walks to the current occupant's feet and sits quietly.
 
 Rounded handwriting:
 
 > It cannot go back, and it has chosen the middle.  
-> Let the one in the middle raise it.
+> Would you like to raise it?
 
 Sharp handwriting:
 
-> You cannot leave an experiment with a stranger.
+> Take care with our Crow Black.
 
 Rounded handwriting:
 
-> It is not an experiment anymore.
+> You can name it as you like.
 
 Sharp handwriting:
 
-> Then what is it?
+> Yes, your bird.
 
-Rounded handwriting:
 
-> Their bird.
 
 There is a long pause. The sharp hand finally answers:
 
-> …Agreed. The one in the middle will raise the little thing.  
+> The one in the middle will raise the little thing.  
 > Do not let it touch the envelope. Do not let it peck the clock.
 
 Rounded handwriting:

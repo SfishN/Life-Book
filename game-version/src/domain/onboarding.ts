@@ -19,7 +19,8 @@ export type OnboardingStep =
 export type GuidanceMode = "quiet" | "nudge" | "lead";
 export type OnboardingStatus = "not-started" | "in-progress" | "complete";
 export type StoryNote = "envelope" | "window" | "mirror" | null;
-export type FinalNote = "reveal" | "adoption";
+export const FINAL_NOTE_ORDER = ["reveal", "crow", "adoption"] as const;
+export type FinalNote = (typeof FINAL_NOTE_ORDER)[number];
 export type FinalNotesRead = Record<FinalNote, boolean>;
 
 export interface OnboardingState {
@@ -62,7 +63,7 @@ export function createOnboardingState(): OnboardingState {
     step: "arrival",
     guidanceMode: "nudge",
     completedAt: null,
-    finalNotesRead: { reveal: false, adoption: false },
+    finalNotesRead: { reveal: false, crow: false, adoption: false },
   };
 }
 
@@ -90,6 +91,7 @@ export function readOnboardingState(storage: StorageLike): OnboardingState {
       completedAt: status === "complete" && typeof parsed.completedAt === "string" ? parsed.completedAt : null,
       finalNotesRead: {
         reveal: parsed.finalNotesRead?.reveal === true,
+        crow: parsed.finalNotesRead?.crow === true,
         adoption: parsed.finalNotesRead?.adoption === true,
       },
     };

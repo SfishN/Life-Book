@@ -36,10 +36,10 @@ const PANEL_META: Record<PanelId, { title: string; icon: typeof BookOpenText; sk
 };
 
 const PANEL_WRITING: Partial<Record<PanelId, { round: string; sharp: string }>> = {
-  skills: { round: "Choose something you want to practice. One real attempt is enough to begin.", sharp: "The plant grows from saved Skill Records, not from promises." },
-  hero: { round: "Tell the room what to call you now.", sharp: "Your name and attributes can be edited later." },
-  achievements: { round: "A moment can live on this wall.", sharp: "Only you choose what to pin or dismiss." },
-  novel: { round: "Your days can become a chapter.", sharp: "Choose the records, edit the draft, then approve it yourself." },
+  skills: { round: "Do it a few more times and it becomes a habit later.", sharp: "Do not pass off the ending as the process. Leave a practice record first." },
+  hero: { round: "At least tell the room what to call you.", sharp: "Write the name. The room keeps things longer than people do." },
+  achievements: { round: "This wall will be full later.", sharp: "If the person living now chooses to pin anything to it." },
+  novel: { round: "Put them together. The chapter will be super good.", sharp: "You should know that the one in the middle doesn't have to write it." },
 };
 
 export function FurniturePanel({ panel, instructionStep, onClose, onDiarySaved }: FurniturePanelProps) {
@@ -70,7 +70,7 @@ export function FurniturePanel({ panel, instructionStep, onClose, onDiarySaved }
           </button>
         </header>
         <div className="panel-content life-modal-content">
-          {guided && PANEL_WRITING[panel] && <div className="panel-handwritten-cue" aria-label="Notes from two writers"><p className="line-a"><span className="writer-mark writer-a" aria-hidden="true">○</span> {PANEL_WRITING[panel].round}</p><p className="line-b"><span className="writer-mark writer-b" aria-hidden="true">△</span> {PANEL_WRITING[panel].sharp}</p></div>}
+          {guided && PANEL_WRITING[panel] && <div className="panel-handwritten-cue" aria-label="Notes from two writers"><p className="line-a">{PANEL_WRITING[panel].round}</p><p className="line-b">{PANEL_WRITING[panel].sharp}</p></div>}
           {panel === "diary" && <DiaryPanel onSaved={onDiarySaved} guided={guided} />}
           {panel === "skills" && <SkillPanel />}
           {panel === "hero" && <ProfilePanel />}

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import {
   createOnboardingState,
+  FINAL_NOTE_ORDER,
   type FinalNote,
   markFinalNoteRead,
   type GuidanceMode,
@@ -61,10 +62,10 @@ const ROOM_INDEX: Array<{ id: PanelId; label: string; object: string; icon: type
 const OBJECTIVES: Partial<Record<OnboardingState["step"], string>> = {
   envelope: "The envelope on the desk is glowing.",
   window: "A pale mark has appeared on the window.",
-  net: "Catch three crossings. Missed shapes always return.",
+  net: "Catch three fireflies. Missed shapes always return.",
   mirror: "Something moved behind the standing mirror.",
   companion: "A folded note has fallen near the little crow.",
-  reveal: "Two folded notes have appeared. Read them in either order.",
+  reveal: "Three folded notes have appeared.",
 };
 
 const INSTRUCTION_PANELS: Partial<Record<OnboardingState["step"], PanelId>> = {
@@ -73,6 +74,7 @@ const INSTRUCTION_PANELS: Partial<Record<OnboardingState["step"], PanelId>> = {
   profile: "hero",
   achievements: "achievements",
   novel: "novel",
+  companion: "guide",
 };
 
 const NEXT_INSTRUCTION_STEP: Partial<Record<OnboardingState["step"], OnboardingState["step"]>> = {
@@ -115,7 +117,6 @@ export function LifeRoomApp() {
   const roomCue = getRoomCue(onboarding.step);
   const unlockedRoomIndex = ROOM_INDEX.filter((item) => getPanelAccess(onboarding.step, item.id) === "open");
   const proximityAccess = proximity ? getPanelAccess(onboarding.step, proximity.panel) : "locked";
-  const unreadFinalNotes: FinalNote[] = (["reveal", "adoption"] as const).filter((note) => !onboarding.finalNotesRead[note]);
   const objective = introductionActive
     ? OBJECTIVES[onboarding.step] ?? (roomCue ? `The little crow is near the ${roomCue.object.toLowerCase()}.` : null)
     : null;
@@ -123,7 +124,7 @@ export function LifeRoomApp() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const restored = readOnboardingState(window.localStorage);
-      setOnboarding(restored.step === "adoption" ? { ...restored, step: "reveal", finalNotesRead: { reveal: true, adoption: restored.finalNotesRead.adoption } } : restored);
+      setOnboarding(restored.step === "adoption" ? { ...restored, step: "reveal" } : restored);
       setOnboardingReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -308,17 +309,12 @@ export function LifeRoomApp() {
     const read = markFinalNoteRead(onboarding, note);
     setRoomNoteOpen(false);
     setActiveFinalNote(null);
-    if (read.finalNotesRead.reveal && read.finalNotesRead.adoption) {
+    if (FINAL_NOTE_ORDER.every((letter) => read.finalNotesRead[letter])) {
       persistOnboarding(moveOnboardingTo(read, "complete"));
-      setSaveNotice("Both notes are read. The little crow stays with you.");
+      setSaveNotice("All three notes are read. The little crow stays with you.");
     } else {
       persistOnboarding(read);
     }
-  }
-
-  function advanceInstruction() {
-    if (onboarding.step !== "companion") return;
-    moveTo("reveal");
   }
 
   function interactFromPrompt() {
@@ -385,14 +381,13 @@ export function LifeRoomApp() {
         {onboardingProximity && introductionActive && !roomCue ? <button type="button" className="interaction-prompt" onClick={interactFromPrompt} aria-label={`${onboardingProximity.label}. Press E or tap to interact.`}><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>{onboardingProximity.label}</span></button> : proximity && proximityAccess !== "locked" ? <button type="button" className="interaction-prompt" onClick={interactFromPrompt} aria-label={`${proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}. Press E or tap to interact.`}><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>{proximityAccess === "explore" ? `Explore the ${roomCue!.object.toLowerCase()}` : `Open ${proximity.label}`}</span></button> : <div className="interaction-hint"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span><span><kbd>E</kbd> interact</span></div>}
       </div>
 
-      {roomCue && !activePanel && !storyModalOpen && <div className="room-paper-shortcuts">
-        {onboarding.step === "reveal" ? unreadFinalNotes.map((note) => <button className="room-paper-shortcut" type="button" key={note} onClick={() => { setActiveFinalNote(note); setRoomNoteOpen(true); }} aria-label={`Read folded note ${note === "reveal" ? 1 : 2}`}><span aria-hidden="true">{note === "reveal" ? "△" : "○"}</span> Read the folded note {note === "reveal" ? 1 : 2}</button>)
-          : <button className="room-paper-shortcut" type="button" onClick={() => { setActiveFinalNote(null); setRoomNoteOpen(true); }} aria-label="Read the folded note"><span aria-hidden="true">○ △</span> Read the folded note</button>}
+      {roomCue && onboarding.step !== "reveal" && !activePanel && !storyModalOpen && <div className="room-paper-shortcuts">
+        <button className="room-paper-shortcut" type="button" onClick={() => { setActiveFinalNote(null); setRoomNoteOpen(true); }} aria-label="Read the folded note">Read the folded note</button>
       </div>}
 
       {activePanel && <FurniturePanel panel={activePanel} instructionStep={onboarding.step} onClose={closePanel} onDiarySaved={diarySaved} />}
 
-      <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={roomNoteOpen || reviewFunctions} reviewMode={reviewFunctions} activeFinalNote={activeFinalNote ?? (onboarding.step === "reveal" ? unreadFinalNotes[0] ?? null : null)} guidanceMode={onboarding.guidanceMode} onBegin={beginIntroduction} onContinue={continueStoryNote} onAdvance={advanceInstruction} onExplore={() => { if (roomCue?.panel) openPanel(roomCue.panel); }} onComplete={finishIntroduction} onCloseRoomNote={() => { setRoomNoteOpen(false); setActiveFinalNote(null); }} onReadFinalNote={readFinalNote} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
+      <IntroductionOverlay note={sceneNote} step={onboarding.step} showArrival={showArrival} showInstruction={roomNoteOpen || reviewFunctions} reviewMode={reviewFunctions} activeFinalNote={activeFinalNote} guidanceMode={onboarding.guidanceMode} onBegin={beginIntroduction} onContinue={continueStoryNote} onExplore={() => { if (roomCue?.panel) openPanel(roomCue.panel); }} onComplete={finishIntroduction} onCloseRoomNote={() => { setRoomNoteOpen(false); setActiveFinalNote(null); }} onReadFinalNote={readFinalNote} onGuidanceMode={chooseGuidance} onOpenPanel={openPanel} />
 
       {showHelp && (
         <div className="intro-backdrop"><section className="intro-card help-card" role="dialog" aria-modal="true" aria-labelledby="help-title"><p className="overline">Room controls and privacy</p><h1 id="help-title">Move at your own pace.</h1><p>Use WASD or Arrow Keys on desktop. On touch screens, drag the joystick or tap to move. Pinch with two fingers to enlarge the whole room, then drag it within its edges to look around. Use E or tap an object to interact; Esc closes an overlay. Records stay in this browser; the little crow reads saved context only when you explicitly opt in.</p><fieldset className="compact-guidance-choice"><legend>Guidance</legend>{(["quiet", "nudge", "lead"] as GuidanceMode[]).map((mode) => <button type="button" key={mode} className={onboarding.guidanceMode === mode ? "is-selected" : ""} aria-pressed={onboarding.guidanceMode === mode} onClick={() => chooseGuidance(mode)}>{mode}</button>)}</fieldset><div className="intro-actions"><button className="primary-button" type="button" onClick={() => setShowHelp(false)} autoFocus>Return to room</button>{!introductionActive && <button className="small-button" type="button" onClick={() => { setShowHelp(false); setReviewFunctions(true); }}>Review room functions</button>}<button className="small-button" type="button" onClick={resetIntroduction}><RotateCcw size={16} /> Reset introduction</button></div></section></div>
