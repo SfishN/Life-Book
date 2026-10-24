@@ -327,14 +327,19 @@ test("story paper is decoded before its writing is revealed", () => {
   assert.match(css, /\.story-note-mirror \.mirror-exchange[\s\S]*translateX\(clamp\(24px, 4vw, 36px\)\)/);
 });
 
-test("room layers use full-resolution sources and scale them only for display", () => {
+test("room uses one lossless composite built from the full-resolution sources", () => {
   const layers = JSON.parse(readFileSync(path.join(root, "src/room/roomLayers.json"), "utf8"));
   const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
   assert.ok(layers.slice(1).every((layer) => layer.source.startsWith("source/")));
-  assert.ok(layers.every((layer) => layer.file.endsWith(".png")));
-  assert.match(room, /setDisplaySize\(width, height\)/);
+  assert.match(room, /this\.load\.image\("room-composite", "\/room\/room-composite\.png"\)/);
+  assert.match(room, /setDisplaySize\(ROOM_WORLD_WIDTH, ROOM_WORLD_HEIGHT\)/);
   assert.equal(existsSync(path.join(root, "basics/assets/room/dark_rose/items")), false);
-  for (const layer of layers) assert.ok(existsSync(path.join(root, "public/room/layers", layer.file)), `runtime layer ${layer.file} exists`);
+  assert.ok(existsSync(path.join(root, "public/room/room-composite.png")));
+  for (const layer of layers) assert.ok(existsSync(path.join(root, "public/room/layers", layer.file)), `editable runtime layer ${layer.file} exists`);
+  assert.deepEqual(
+    readFileSync(path.join(root, "basics/assets/room/dark_rose/source/room-window.png")),
+    readFileSync(path.join(root, "documents/ui-concepts/window-scenery-concept-v1.png")),
+  );
 });
 
 test("room canvas respects high-density phone displays without an unbounded GPU surface", () => {

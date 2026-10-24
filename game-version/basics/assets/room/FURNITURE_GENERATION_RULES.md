@@ -69,7 +69,7 @@ Edit `WALKABLE_FLOOR`, `SOLID_FURNITURE`, and `HERO_FOOT_CLEARANCE` in `src/room
 2. Ask for **one complete object only**, in the same elevated three-quarter camera, warm painted style, outline weight, and light direction. The two horizontal directions of floor furniture must follow the room tiles; vertical edges stay vertical.
 3. Request an RGBA PNG with a transparent background and the **exact canvas dimensions** in the table. Do not include a room, painted floor, text, or another object. Do not remove feet, wall brackets, hanging cords, or contact shadow.
 4. If the image generator cannot output that exact pixel size, place its result into an exact-size transparent canvas in an image editor. Keep the whole object and its proportions. Do not stretch width and height independently.
-5. Replace the matching full-resolution PNG in `dark_rose/source/`. Do not edit the runtime copy in `public/room/layers/`. Run `python scripts/build_room_layers.py` from the `game-version` directory, then refresh the preview.
+5. Replace the matching full-resolution PNG in `dark_rose/source/`. Do not edit the runtime copy in `public/room/layers/`. Run `npm run build:room` from the `game-version` directory, then refresh the preview.
 6. The builder copies the original PNG bytes without resizing or lossy conversion; Phaser applies the target display size. For a new furniture type, add a high-resolution PNG and manifest entry, then update this table and any interaction point.
 
 Suggested prompt:

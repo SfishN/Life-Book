@@ -1,4 +1,4 @@
-const CACHE_NAME = "life-room-v15";
+const CACHE_NAME = "life-room-v16";
 const CORE_ASSETS = [
   "/",
   "/icon.svg",

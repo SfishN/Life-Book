@@ -5,7 +5,6 @@ import { FINAL_NOTE_ORDER, type FinalNote, type FinalNotesRead, type OnboardingS
 import type { HeroProfile, PanelId, RoomAtmosphere } from "@/domain/types";
 import { getMoodPreset } from "@/domain/mood";
 import { getPanelAccess, getRoomCue } from "@/onboarding/roomCues";
-import ROOM_LAYERS from "./roomLayers.json";
 
 interface RoomGameProps {
   paused: boolean;
@@ -206,7 +205,6 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, fina
         private pauseFrame = 0;
         private memoryGlow!: Phaser.GameObjects.Particles.ParticleEmitter;
         private background!: Phaser.GameObjects.Image;
-        private roomLayers: Phaser.GameObjects.Image[] = [];
         private ambient!: Phaser.GameObjects.Rectangle;
         private windowLight!: Phaser.GameObjects.Image;
         private lampLight!: Phaser.GameObjects.Image;
@@ -282,9 +280,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, fina
         }
 
         preload() {
-          for (const layer of ROOM_LAYERS) {
-            this.load.image(layer.id, `/room/layers/${layer.file}`);
-          }
+          this.load.image("room-composite", "/room/room-composite.png");
           this.load.image("hero-female", "/characters/girl-v2.webp");
           this.load.image("hero-male", "/characters/boy-v2.webp");
           this.load.spritesheet("intro-envelope", "/onboarding/objects/envelope-3f.webp", { frameWidth: 724, frameHeight: 724 });
@@ -297,11 +293,10 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, fina
 
         create() {
           this.input.addPointer(1);
-          this.roomLayers = ROOM_LAYERS.map((layer, index) => {
-            const [x, y, width, height] = layer.target;
-            return this.add.image(x, y, layer.id).setOrigin(0, 0).setDisplaySize(width, height).setDepth(index / 100);
-          });
-          this.background = this.roomLayers[0];
+          this.background = this.add.image(0, 0, "room-composite")
+            .setOrigin(0, 0)
+            .setDisplaySize(ROOM_WORLD_WIDTH, ROOM_WORLD_HEIGHT)
+            .setDepth(0);
 
           const particlesTexture = this.textures.createCanvas("memory-speck", 12, 12);
           if (particlesTexture) {
@@ -701,7 +696,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, fina
               return Phaser.Display.Color.GetColor(color.r, color.g, color.b);
             };
             const roomTint = blend(oldTint, preset.tint);
-            for (const layer of this.roomLayers) layer.setTint(roomTint);
+            this.background.setTint(roomTint);
             this.ambient.setFillStyle(blend(oldAmbient, preset.ambientColor));
             this.windowLight.setTint(blend(oldWindow, preset.windowColor));
           };

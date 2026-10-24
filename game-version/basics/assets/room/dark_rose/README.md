@@ -14,7 +14,7 @@ The runtime sprites keep the full pixel dimensions of these isolated cutouts. Ph
 
 Use the PNGs in `source/` and keep their full resolution. Draw them in manifest order, scaling each one to the manifest's target rectangle at runtime. Keep the base at `(0, 0)` and 1536 × 1024. Interaction points are documented in the parent generation rules and remain separate from image anchors.
 
-This is the active game theme. `scripts/build_room_layers.py` copies the original full-resolution PNGs byte-for-byte into the runtime folder, without resizing or lossy conversion. The original `default` assets remain available as a reference.
+This is the active game theme. `npm run build:room` uses the full-resolution sources to rebuild the lossless runtime composite while preserving all individual PNG layers in `public/room/layers/`. The original `default` assets remain available as a reference.
 
 ## Generation prompt pattern
 
