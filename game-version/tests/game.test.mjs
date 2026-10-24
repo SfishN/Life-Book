@@ -40,7 +40,6 @@ const {
   markFinalNoteRead,
   moveOnboardingTo,
   readOnboardingState,
-  setGuidanceMode,
   writeOnboardingState,
 } = await import("../src/domain/onboarding.ts");
 const { getPanelAccess } = await import("../src/onboarding/roomCues.ts");
@@ -234,6 +233,17 @@ test("AI companion belongs to the little crow rather than the mirror panel", () 
   assert.match(panel, /crow-companion-backdrop/);
   assert.match(panel, /kept until<br \/>midnight/);
   assert.match(room, /\{ id: "guide", label: "Little Crow"/);
+  assert.match(room, /\{ id: "guide", label: "Little Crow", x: 535, y: 650, radiusX: 75, radiusY: 42/);
+  assert.match(room, /CROW_INTERACTION_OFFSET_X = 105/);
+  assert.match(room, /guideRing\.setPosition\(this\.pet\.x \+ CROW_INTERACTION_OFFSET_X, this\.pet\.y\)/);
+  assert.match(room, /syncCrowInteractionRing\(\)/);
+  assert.match(room, /private crowInteractionReady = false/);
+  assert.match(room, /onComplete: \(\) => \{[\s\S]*this\.crowInteractionReady = true;[\s\S]*this\.syncCrowInteractionRing\(\)/);
+  assert.match(room, /const visible = this\.crowInteractionReady && this\.pet\.visible/);
+  assert.match(room, /if \(hotspot\.id === "guide" && !this\.crowInteractionReady\) continue/);
+  assert.doesNotMatch(room, /hotspot\.id === "guide"\) continue/);
+  assert.match(app, /detail\.panel !== "guide"/);
+  assert.match(app, /Talk to the little crow/);
   assert.doesNotMatch(room, /\{ id: "guide", label: "Mirror Guide"/);
   assert.match(route, /55 words/);
 });
@@ -284,11 +294,63 @@ test("mobile introduction can catch crossings from the bottom interaction prompt
   assert.match(room, /this\.coarsePointer \? 3200 : 6500/);
   assert.match(css, /@media \(hover: none\), \(pointer: coarse\)/);
   assert.match(css, /\.touch-interact-label \{\s*display: inline-flex;/);
+  assert.match(app, /const onboardingRef = useRef\(onboarding\)/);
+  assert.match(app, /getPanelAccess\(onboardingRef\.current\.step, detail\.panel\)/);
+  assert.match(app, /window\.addEventListener\("life-room:onboarding-proximity", nearbyOnboarding\)[\s\S]*\}, \[\]\);/);
+});
+
+test("folded notes and look-closer actions use the shared E or Tap interaction", () => {
+  const app = readFileSync(path.join(root, "src/components/LifeRoomApp.tsx"), "utf8");
+  const overlay = readFileSync(path.join(root, "src/onboarding/IntroductionOverlay.tsx"), "utf8");
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  assert.doesNotMatch(app, /room-paper-shortcuts|Read the folded note/);
+  assert.match(app, /onboardingProximity && introductionActive/);
+  assert.match(room, /Open the folded note/);
+  assert.match(room, /getNearbyRoomPaper\(\)/);
+  assert.match(overlay, /aria-keyshortcuts="E"/);
+  assert.match(overlay, /event\.key\.toLowerCase\(\) !== "e"/);
+  assert.doesNotMatch(overlay, /room-paper-close/);
+});
+
+test("story paper is decoded before its writing is revealed", () => {
+  const overlay = readFileSync(path.join(root, "src/onboarding/IntroductionOverlay.tsx"), "utf8");
+  const css = readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+  assert.match(overlay, /decoding: "sync"/);
+  assert.match(overlay, /preload: true/);
+  assert.match(overlay, /onLoad: \(\) => setPaperReady\(true\)/);
+  assert.equal((overlay.match(/className="primary-button story-note-action"/g) ?? []).length, 3);
+  assert.match(overlay, /event\.key\.toLowerCase\(\) !== "e" \|\| event\.repeat \|\| !paperReady/);
+  assert.match(overlay, /<kbd>E<\/kbd><span className="touch-interact-label"/);
+  assert.match(css, /\.story-note\.is-paper-ready > img/);
+  assert.match(css, /\.story-note-action kbd/);
+  assert.match(css, /\.story-note\.is-paper-ready \.story-note-copy/);
+  assert.match(css, /\.story-note-mirror \.mirror-exchange[\s\S]*translateX\(clamp\(24px, 4vw, 36px\)\)/);
+});
+
+test("room layers use full-resolution sources and scale them only for display", () => {
+  const layers = JSON.parse(readFileSync(path.join(root, "src/room/roomLayers.json"), "utf8"));
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  assert.ok(layers.slice(1).every((layer) => layer.source.startsWith("source/")));
+  assert.ok(layers.every((layer) => layer.file.endsWith(".png")));
+  assert.match(room, /setDisplaySize\(width, height\)/);
+  assert.equal(existsSync(path.join(root, "basics/assets/room/dark_rose/items")), false);
+  for (const layer of layers) assert.ok(existsSync(path.join(root, "public/room/layers", layer.file)), `runtime layer ${layer.file} exists`);
+});
+
+test("room canvas respects high-density phone displays without an unbounded GPU surface", () => {
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  assert.match(room, /MAX_RENDER_DENSITY = 4/);
+  assert.match(room, /MAX_RENDER_PIXELS = 6_000_000/);
+  assert.match(room, /MAX_RENDER_EDGE = 4096/);
+  assert.match(room, /window\.devicePixelRatio/);
+  assert.match(room, /ROOM_WORLD_WIDTH \/ Math\.max\(1, width\)/);
+  assert.match(room, /mode: Phaser\.Scale\.NONE/);
+  assert.match(room, /new ResizeObserver\(resizeRenderer\)/);
 });
 
 test("pinch zoom expands the room viewport and keeps two-axis camera movement bounded", () => {
   const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
-  assert.match(room, /mode: Phaser\.Scale\.RESIZE/);
+  assert.match(room, /mode: Phaser\.Scale\.NONE/);
   assert.match(room, /Math\.min\(viewportWidth \/ ROOM_WORLD_WIDTH, viewportHeight \/ ROOM_WORLD_HEIGHT\)/);
   assert.match(room, /verticalFillZoom \* CAMERA_OVERSCAN_AFTER_VERTICAL_FILL/);
   assert.match(room, /this\.cameraCenter\.x = halfViewWidth >= ROOM_WORLD_WIDTH \/ 2/);
@@ -308,14 +370,26 @@ test("onboarding uses a new namespace and preserves Life Room records", () => {
   assert.equal(saved.get(GAME_STORAGE_KEY), recordsBefore);
 });
 
-test("onboarding completion and guidance mode remain explicit", () => {
+test("onboarding completion remains explicit without obsolete guidance modes", () => {
   const fresh = createOnboardingState();
-  assert.deepEqual({ status: fresh.status, step: fresh.step, guidanceMode: fresh.guidanceMode }, { status: "not-started", step: "arrival", guidanceMode: "nudge" });
-  const led = setGuidanceMode(fresh, "lead");
-  assert.equal(led.guidanceMode, "lead");
-  const complete = moveOnboardingTo(led, "complete");
+  assert.deepEqual({ status: fresh.status, step: fresh.step }, { status: "not-started", step: "arrival" });
+  assert.equal("guidanceMode" in fresh, false);
+  const complete = moveOnboardingTo(fresh, "complete");
   assert.equal(complete.status, "complete");
   assert.ok(complete.completedAt);
+});
+
+test("mirror interaction is one-shot and obsolete guidance choices are absent", () => {
+  const app = readFileSync(path.join(root, "src/components/LifeRoomApp.tsx"), "utf8");
+  const overlay = readFileSync(path.join(root, "src/onboarding/IntroductionOverlay.tsx"), "utf8");
+  const room = readFileSync(path.join(root, "src/room/RoomGame.tsx"), "utf8");
+  const onboarding = readFileSync(path.join(root, "src/domain/onboarding.ts"), "utf8");
+  assert.match(room, /if \(action === "mirror"\) \{[\s\S]*this\.mirrorReady = false;[\s\S]*"life-room:onboarding-proximity", \{ detail: null \}/);
+  assert.match(app, /if \(action === "mirror"\) \{[\s\S]*setOnboardingProximity\(null\);[\s\S]*setSceneNote\("mirror"\);/);
+  assert.match(app, /function moveTo[\s\S]*setOnboardingProximity\(null\);/);
+  for (const source of [app, overlay, room, onboarding]) {
+    assert.doesNotMatch(source, /GuidanceMode|guidanceMode|setGuidanceMode|compact-guidance-choice|guidance-choice/);
+  }
 });
 
 test("finished furniture opens during the remaining introduction while later furniture stays locked", () => {
@@ -370,6 +444,9 @@ test("onboarding contains the approved sequential function and reveal stages", (
   assert.match(app, /companion: "guide"/);
   assert.doesNotMatch(overlay, /—A|—B/);
   assert.match(app, /Reset introduction/);
+  assert.match(app, /Skip guidance/);
+  assert.match(app, /moveOnboardingTo\(onboarding, "complete"\)/);
+  assert.match(app, /Your room records were not changed/);
   assert.doesNotMatch(app, /Reset Life Room records/);
 });
 
@@ -381,11 +458,12 @@ test("malformed onboarding storage returns a first-run state", () => {
 });
 
 test("runtime onboarding assets remain present", () => {
-  for (const asset of ["objects/envelope-3f.png", "objects/net-sweep-8f.png", "notes/leaf-note.png", "notes/note-paper-overlap.png", "pet/pet-flutter-8f.png", "pet/pet-footprint-8.png", "pet/pet-threatening-shadow.png"]) {
+  for (const asset of ["objects/envelope-3f.png", "objects/net-sweep-8f.png", "notes/leaf-note.png", "notes/note-paper-overlap.png", "pet/pet-footprint-8.png", "pet/pet-threatening-shadow.png"]) {
     assert.ok(existsSync(path.join(root, "basics/settings", asset)), `source ${asset} exists`);
-    assert.ok(existsSync(path.join(root, "public/onboarding", asset)), `runtime ${asset} exists`);
+    assert.ok(existsSync(path.join(root, "public/onboarding", asset.replace(/\.png$/, ".webp"))), `optimized runtime ${asset} exists`);
   }
-  assert.ok(existsSync(path.join(root, "public/onboarding/pet/pet-eight-legs-v5-8f.png")));
+  assert.ok(existsSync(path.join(root, "basics/settings/pet/pet-eight-legs-v5-8f.png")));
+  assert.ok(existsSync(path.join(root, "public/onboarding/pet/pet-eight-legs-v5-8f.webp")));
 });
 
 test("AI extension points are server routes with no browser-embedded key", () => {

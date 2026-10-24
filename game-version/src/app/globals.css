@@ -344,6 +344,11 @@ h3 {
     display: none;
   }
 
+  .room-paper-actions kbd,
+  .story-note-action kbd {
+    display: none;
+  }
+
   .touch-interact-label {
     display: inline-flex;
     align-items: center;
@@ -1378,7 +1383,11 @@ button:disabled {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
 }
+
+.story-note.is-paper-ready > img { opacity: 1; }
 
 .story-note-envelope > img,
 .story-note-mirror > img {
@@ -1393,6 +1402,14 @@ button:disabled {
   overflow: auto;
   padding: 34px 24px;
   color: #342a35;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 110ms ease-out 100ms;
+}
+
+.story-note.is-paper-ready .story-note-copy {
+  visibility: visible;
+  opacity: 1;
 }
 
 .story-note-copy h1 {
@@ -1479,6 +1496,10 @@ button:disabled {
   width: min(500px, 60%);
 }
 
+.story-note-mirror .mirror-exchange {
+  transform: translateX(clamp(24px, 4vw, 36px));
+}
+
 .mirror-exchange > p:not(.overline) {
   margin: 7px 0;
   padding-left: 8px;
@@ -1531,8 +1552,7 @@ button:disabled {
   gap: 9px;
 }
 
-.function-teaching-grid button,
-.guidance-choice button {
+.function-teaching-grid button {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1549,65 +1569,25 @@ button:disabled {
   background: #fffaf2;
 }
 
-.function-teaching-grid svg,
-.guidance-choice svg {
+.function-teaching-grid svg {
   flex: 0 0 auto;
   color: var(--lavender);
 }
 
-.function-teaching-grid span,
-.guidance-choice span {
+.function-teaching-grid span {
   min-width: 0;
 }
 
 .function-teaching-grid strong,
-.function-teaching-grid small,
-.guidance-choice strong,
-.guidance-choice small {
+.function-teaching-grid small {
   display: block;
 }
 
-.function-teaching-grid small,
-.guidance-choice small {
+.function-teaching-grid small {
   margin-top: 3px;
   color: var(--ink-soft);
   font-size: 0.73rem;
   line-height: 1.45;
-}
-
-.guidance-choice,
-.compact-guidance-choice {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 18px 0 0;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-}
-
-.guidance-choice legend,
-.compact-guidance-choice legend {
-  padding: 0 6px;
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.guidance-choice button.is-selected,
-.compact-guidance-choice button.is-selected {
-  border-color: var(--lavender);
-  outline: 2px solid rgba(122, 101, 141, 0.2);
-  background: rgba(225, 214, 234, 0.65);
-}
-
-.compact-guidance-choice button {
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.55);
-  text-transform: capitalize;
-  cursor: pointer;
 }
 
 .final-note {
@@ -1632,19 +1612,6 @@ button:disabled {
   text-align: center;
 }
 
-.room-index-guidance {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  color: var(--ink-soft);
-  font-size: 0.76rem;
-  text-transform: capitalize;
-}
-
 .help-card {
   width: min(720px, 94vw);
 }
@@ -1659,7 +1626,6 @@ button:disabled {
   .story-note-copy h1 { margin-bottom: 10px; }
   .handwriting { margin: 6px 0; padding: 6px 8px 6px 29px; }
   .function-teaching-grid { grid-template-columns: 1fr; }
-  .guidance-choice { grid-template-columns: 1fr; }
   .final-note { display: none; }
   .story-objective { top: 82px; }
 }
@@ -1672,7 +1638,6 @@ button:disabled {
   .story-note-copy h1 { font-size: 1.2rem; }
   .handwriting-a, .line-a { font-size: 1rem; }
   .handwriting-b, .line-b { font-size: 0.68rem; }
-  .compact-guidance-choice { grid-template-columns: 1fr; }
 }
 
 /* Life Room function panels v2 */
@@ -2520,7 +2485,7 @@ button.list-row { cursor: pointer; }
   bottom: -22px;
   width: 355px;
   height: 355px;
-  background: url("/onboarding/pet/pet-eight-legs-v5-8f.png") 0 0 / 400% 200% no-repeat;
+  background: url("/onboarding/pet/pet-eight-legs-v5-8f.webp") 0 0 / 400% 200% no-repeat;
   filter: drop-shadow(0 32px 30px rgba(29, 18, 34, 0.4));
 }
 
@@ -2918,31 +2883,6 @@ button.list-row { cursor: pointer; }
   .crow-context-consent { font-size: 0.6rem; }
 }
 
-.room-paper-shortcuts {
-  position: absolute;
-  z-index: 21;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(25px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.room-paper-shortcut {
-  padding: 8px 13px;
-  border: 1px solid rgba(250, 227, 181, 0.48);
-  border-radius: 10px;
-  background: rgba(48, 34, 53, 0.72);
-  color: #fff4da;
-  font-size: 0.72rem;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-}
-
-.room-paper-shortcut:hover { background: rgba(78, 53, 79, 0.9); }
-.room-paper-shortcut:focus-visible { outline: 2px solid #fff4da; outline-offset: 2px; }
-
 .room-paper-note {
   position: absolute;
   z-index: 70;
@@ -2969,27 +2909,13 @@ button.list-row { cursor: pointer; }
   transform: translate(-50%, -50%) rotate(-0.5deg);
 }
 
-.room-paper-close {
-  position: absolute;
-  top: 13px;
-  right: 15px;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(90, 69, 82, 0.11);
-  color: #514052;
-  cursor: pointer;
-}
-
 .room-paper-writing { display: grid; gap: 12px; margin-top: 12px; }
 .room-paper-writing p { margin: 0; line-height: 1.42; }
 .room-paper-writing .line-a { font-size: clamp(1.12rem, 2vw, 1.5rem); }
 .room-paper-writing .line-b { font-size: clamp(0.82rem, 1.35vw, 1.05rem); }
 .room-paper-story .room-paper-writing { gap: 10px; }
 .room-paper-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
+.room-paper-actions button { display: inline-flex; align-items: center; gap: 8px; }
 
 .panel-handwritten-cue,
 .diary-handwritten-cue {
@@ -3022,8 +2948,6 @@ button.list-row { cursor: pointer; }
 .crow-guided-writing .line-b { font-size: 0.78rem; }
 
 @media (max-width: 620px) {
-  .room-paper-shortcuts { right: 12px; bottom: 76px; max-width: calc(100vw - 24px); }
-  .room-paper-shortcut { font-size: 0.65rem; }
   .room-paper-note,
   .room-paper-story {
     right: auto;

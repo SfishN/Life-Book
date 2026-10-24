@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { FINAL_NOTE_ORDER, type FinalNote, type FinalNotesRead, type GuidanceMode, type OnboardingStep } from "@/domain/onboarding";
+import { FINAL_NOTE_ORDER, type FinalNote, type FinalNotesRead, type OnboardingStep } from "@/domain/onboarding";
 import type { HeroProfile, PanelId, RoomAtmosphere } from "@/domain/types";
 import { getMoodPreset } from "@/domain/mood";
 import { getPanelAccess, getRoomCue } from "@/onboarding/roomCues";
@@ -12,7 +12,6 @@ interface RoomGameProps {
   memoryLevel: number;
   atmosphere: RoomAtmosphere;
   onboardingStep: OnboardingStep;
-  guidanceMode: GuidanceMode;
   finalNotesRead: FinalNotesRead;
   heroGender: HeroProfile["avatarStyle"];
 }
@@ -22,6 +21,7 @@ const HERO_DISPLAY_HEIGHT = 160;
 const HERO_FRAME_SIZE = 320;
 const HERO_WALK_FRAMES = [1, 2, 3, 2] as const;
 const CROW_SPRITE_SCALE = 0.34;
+const CROW_INTERACTION_OFFSET_X = 105;
 const ROOM_WALK_SPEED = 300;
 const INTRODUCTION_WALK_SPEED = 420;
 const FINAL_PAPER_POSITIONS: Record<FinalNote, readonly [number, number]> = {
@@ -34,6 +34,10 @@ const ROOM_WORLD_HEIGHT = 1024;
 const CAMERA_PAN_THRESHOLD = 10;
 const CAMERA_OVERSCAN_AFTER_VERTICAL_FILL = 1.2;
 const MAX_ROOM_ZOOM = 4.2;
+const MAX_RENDER_DENSITY = 4;
+const MAX_RENDER_PIXELS = 6_000_000;
+const MAX_RENDER_EDGE = 4096;
+const PAPER_INTERACTION_RADIUS = 105;
 type IntroAction = "envelope" | "window" | "sweep" | "mirror";
 type RoomKey = "up" | "down" | "left" | "right" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight" | "interact";
 
@@ -60,16 +64,16 @@ interface IntroductionHotspot {
 
 const HOTSPOTS: Hotspot[] = [
   { id: "achievements", label: "Achievement Wall", x: 990, y: 625, radiusX: 70, radiusY: 48, clickAreas: [[865, 180, 155, 175], [1000, 225, 150, 85], [1000, 325, 100, 80], [960, 555, 75, 90]] },
-  { id: "guide", label: "Little Crow", x: 430, y: 650, radiusX: 55, radiusY: 50, clickAreas: [[390, 590, 80, 115]] },
+  { id: "guide", label: "Little Crow", x: 535, y: 650, radiusX: 75, radiusY: 42, clickAreas: [[390, 590, 80, 115]] },
   { id: "diary", label: "Diary", x: 365, y: 645, radiusX: 75, radiusY: 38, clickAreas: [[225, 280, 170, 360]] },
   { id: "skills", label: "Skill Tree", x: 430, y: 760, radiusX: 75, radiusY: 42, clickAreas: [[300, 620, 115, 145]] },
   { id: "hero", label: "Profile", x: 790, y: 645, radiusX: 100, radiusY: 48, clickAreas: [[545, 255, 500, 355]] },
   { id: "novel", label: "Life Novel", x: 1080, y: 730, radiusX: 105, radiusY: 50, clickAreas: [[980, 470, 420, 260]] },
 ];
 
-function insideHotspot(x: number, y: number, hotspot: Hotspot): boolean {
-  const relativeX = (x - hotspot.x) / hotspot.radiusX;
-  const relativeY = (y - hotspot.y) / hotspot.radiusY;
+function insideHotspot(x: number, y: number, hotspot: Hotspot, centerX = hotspot.x, centerY = hotspot.y): boolean {
+  const relativeX = (x - centerX) / hotspot.radiusX;
+  const relativeY = (y - centerY) / hotspot.radiusY;
   return relativeX * relativeX + relativeY * relativeY <= 1 || hotspot.clickAreas.some(([left, top, width, height]) =>
     x >= left && x <= left + width && y >= top && y <= top + height);
 }
@@ -118,17 +122,29 @@ function canStandAt(x: number, y: number): boolean {
     !pointInPolygon(x, y, footprint) || distanceToEdges(x, y, footprint) <= FURNITURE_COLLISION_INSET);
 }
 
+function getRenderDensity(width: number, height: number): number {
+  const deviceDensity = Math.max(1, Math.min(MAX_RENDER_DENSITY, window.devicePixelRatio || 1));
+  const legacyRoomDensity = Math.min(MAX_RENDER_DENSITY, ROOM_WORLD_WIDTH / Math.max(1, width));
+  const preferredDensity = Math.max(deviceDensity, legacyRoomDensity);
+  const budgetDensity = Math.min(
+    Math.sqrt(MAX_RENDER_PIXELS / Math.max(1, width * height)),
+    MAX_RENDER_EDGE / Math.max(1, width),
+    MAX_RENDER_EDGE / Math.max(1, height),
+  );
+  return Math.max(1, Math.min(preferredDensity, budgetDensity));
+}
+
 const INTRODUCTION_HOTSPOTS: Record<"envelope" | "window" | "mirror", IntroductionHotspot> = {
   envelope: { action: "envelope", label: "Open the glowing envelope", x: 1160, y: 665, radius: 180 },
   window: { action: "window", label: "Inspect the mark on the window", x: 1195, y: 705, radius: 130, clickX: 1200, clickY: 445, clickRadius: 165 },
   mirror: { action: "mirror", label: "Look behind the mirror", x: 520, y: 650, radius: 130, clickX: 490, clickY: 455, clickRadius: 150 },
 };
 
-export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guidanceMode, finalNotesRead, heroGender }: RoomGameProps) {
+export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, finalNotesRead, heroGender }: RoomGameProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(paused);
   const visualRef = useRef<RoomVisualState>({ memoryLevel, atmosphere });
-  const onboardingRef = useRef({ step: onboardingStep, guidanceMode, finalNotesRead });
+  const onboardingRef = useRef({ step: onboardingStep, finalNotesRead });
   const heroGenderRef = useRef(heroGender);
   const gameRef = useRef<{ destroy: (removeCanvas: boolean, noReturn?: boolean) => void } | null>(null);
 
@@ -143,9 +159,9 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
   }, [memoryLevel, atmosphere]);
 
   useEffect(() => {
-    onboardingRef.current = { step: onboardingStep, guidanceMode, finalNotesRead };
+    onboardingRef.current = { step: onboardingStep, finalNotesRead };
     window.dispatchEvent(new CustomEvent("life-room:onboarding", { detail: onboardingRef.current }));
-  }, [finalNotesRead, guidanceMode, onboardingStep]);
+  }, [finalNotesRead, onboardingStep]);
 
   useEffect(() => {
     heroGenderRef.current = heroGender;
@@ -154,6 +170,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
 
   useEffect(() => {
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
 
     async function mountGame() {
       if (!hostRef.current || gameRef.current) return;
@@ -184,6 +201,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private nearest: Hotspot | null = null;
         private introNearest: IntroductionHotspot | null = null;
         private introPrompt = "";
+        private paperPrompt = "";
         private panelOpen = false;
         private pauseFrame = 0;
         private memoryGlow!: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -212,9 +230,9 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         private caughtCount = 0;
         private birdStartedAt = 0;
         private mirrorReady = false;
+        private crowInteractionReady = false;
         private lastRevision = 0;
         private onboardingStep: OnboardingStep = "arrival";
-        private guidanceMode: GuidanceMode = "nudge";
         private reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         private coarsePointer = window.matchMedia("(pointer: coarse)").matches;
         private lightTransition = { value: 0 };
@@ -234,9 +252,8 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           this.applyVisualState((event as CustomEvent<RoomVisualState>).detail, true);
         };
         private onOnboarding = (event: Event) => {
-          const detail = (event as CustomEvent<{ step: OnboardingStep; guidanceMode: GuidanceMode; finalNotesRead: FinalNotesRead }>).detail;
+          const detail = (event as CustomEvent<{ step: OnboardingStep; finalNotesRead: FinalNotesRead }>).detail;
           this.onboardingStep = detail.step;
-          this.guidanceMode = detail.guidanceMode;
           this.finalNotesRead = detail.finalNotesRead;
           this.applyOnboardingState();
         };
@@ -268,21 +285,21 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           for (const layer of ROOM_LAYERS) {
             this.load.image(layer.id, `/room/layers/${layer.file}`);
           }
-          this.load.image("hero-female", "/characters/girl-v2.png");
-          this.load.image("hero-male", "/characters/boy-v2.png");
-          this.load.spritesheet("intro-envelope", "/onboarding/objects/envelope-3f.png", { frameWidth: 724, frameHeight: 724 });
-          this.load.spritesheet("intro-net", "/onboarding/objects/net-sweep-8f.png", { frameWidth: 443, frameHeight: 443, endFrame: 7 });
-          this.load.spritesheet("intro-pet", "/onboarding/pet/pet-eight-legs-v5-8f.png", { frameWidth: 512, frameHeight: 512, endFrame: 7 });
-          this.load.image("intro-leaf", "/onboarding/notes/leaf-note.png");
-          this.load.image("intro-footprints", "/onboarding/pet/pet-footprint-8.png");
-          this.load.image("intro-shadow", "/onboarding/pet/pet-threatening-shadow.png");
+          this.load.image("hero-female", "/characters/girl-v2.webp");
+          this.load.image("hero-male", "/characters/boy-v2.webp");
+          this.load.spritesheet("intro-envelope", "/onboarding/objects/envelope-3f.webp", { frameWidth: 724, frameHeight: 724 });
+          this.load.spritesheet("intro-net", "/onboarding/objects/net-sweep-8f.webp", { frameWidth: 443, frameHeight: 443, endFrame: 7 });
+          this.load.spritesheet("intro-pet", "/onboarding/pet/pet-eight-legs-v5-8f.webp", { frameWidth: 512, frameHeight: 512, endFrame: 7 });
+          this.load.image("intro-leaf", "/onboarding/notes/leaf-note.webp");
+          this.load.image("intro-footprints", "/onboarding/pet/pet-footprint-8.webp");
+          this.load.image("intro-shadow", "/onboarding/pet/pet-threatening-shadow.webp");
         }
 
         create() {
           this.input.addPointer(1);
           this.roomLayers = ROOM_LAYERS.map((layer, index) => {
-            const [x, y] = layer.target;
-            return this.add.image(x, y, layer.id).setOrigin(0, 0).setDepth(index / 100);
+            const [x, y, width, height] = layer.target;
+            return this.add.image(x, y, layer.id).setOrigin(0, 0).setDisplaySize(width, height).setDepth(index / 100);
           });
           this.background = this.roomLayers[0];
 
@@ -324,7 +341,6 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           }).setDepth(3);
 
           for (const hotspot of HOTSPOTS) {
-            if (hotspot.id === "guide") continue;
             const ring = this.add.ellipse(hotspot.x, hotspot.y, hotspot.radiusX * 2, hotspot.radiusY * 2)
               .setStrokeStyle(3, 0xffe7aa, 0.13)
               .setFillStyle(0xffe7aa, 0.015)
@@ -380,7 +396,6 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           window.addEventListener("life-room:virtual-move", this.onVirtualMove);
           this.applyVisualState(visualRef.current, false);
           this.onboardingStep = onboardingRef.current.step;
-          this.guidanceMode = onboardingRef.current.guidanceMode;
           this.finalNotesRead = onboardingRef.current.finalNotesRead;
           this.applyOnboardingState();
           this.pauseFrame = window.requestAnimationFrame(() => this.setPaused(pausedRef.current));
@@ -448,7 +463,11 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           else this.mirrorReady = false;
 
           const roomCue = getRoomCue(this.onboardingStep);
-          for (const { id, ring } of this.hotspotRings) ring.setVisible(getPanelAccess(this.onboardingStep, id) !== "locked");
+          this.crowInteractionReady = this.onboardingStep === "complete";
+          for (const { id, ring } of this.hotspotRings) {
+            const unlocked = getPanelAccess(this.onboardingStep, id) !== "locked";
+            ring.setVisible(unlocked && (id !== "guide" || this.crowInteractionReady));
+          }
           this.instructionGlow.setVisible(Boolean(roomCue));
           if (this.onboardingStep === "reveal") {
             for (const note of FINAL_NOTE_ORDER) {
@@ -464,9 +483,26 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             if (this.onboardingStep !== "reveal") this.instructionPaper.setPosition(...roomCue.paper).setAlpha(1);
             this.footprints.setVisible(false);
             this.threateningShadow.setVisible(false).setAlpha(0);
-            if (this.reducedMotion) this.pet.setPosition(...roomCue.crow).setAlpha(0.92);
+            if (this.reducedMotion) {
+              this.pet.setPosition(...roomCue.crow).setAlpha(0.92);
+              this.crowInteractionReady = true;
+              this.syncCrowInteractionRing();
+            }
             else {
-              this.tweens.add({ targets: this.pet, x: roomCue.crow[0], y: roomCue.crow[1], alpha: 0.92, duration: 900, ease: "Sine.easeInOut" });
+              const destinationStep = this.onboardingStep;
+              this.tweens.add({
+                targets: this.pet,
+                x: roomCue.crow[0],
+                y: roomCue.crow[1],
+                alpha: 0.92,
+                duration: 900,
+                ease: "Sine.easeInOut",
+                onComplete: () => {
+                  if (this.onboardingStep !== destinationStep) return;
+                  this.crowInteractionReady = true;
+                  this.syncCrowInteractionRing();
+                },
+              });
               this.tweens.add({ targets: this.instructionGlow, alpha: 0.7, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
               if (this.onboardingStep === "reveal") {
                 FINAL_NOTE_ORDER.forEach((note, index) => {
@@ -476,27 +512,22 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
                 this.tweens.add({ targets: this.instructionPaper, y: roomCue.paper[1] - 6, duration: 1000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
               }
             }
-          } else if (this.onboardingStep === "complete") this.applyGuidanceAppearance();
+          } else if (this.onboardingStep === "complete") this.applyCompanionAppearance();
           else if (this.onboardingStep !== "mirror") {
             this.pet.setPosition(430, 645).setAlpha(0.82).setScale(CROW_SPRITE_SCALE);
             this.footprints.setVisible(false);
             this.threateningShadow.setVisible(false).setAlpha(0);
           }
-          this.refreshIntroductionProximity(true);
+          if (roomCue) this.refreshRoomCueProximity(true);
+          else this.refreshIntroductionProximity(true);
         }
 
-        private applyGuidanceAppearance() {
+        private applyCompanionAppearance() {
           this.threateningShadow.setVisible(false).setAlpha(0);
-          if (this.guidanceMode === "quiet") {
-            this.pet.setPosition(430, 650).setScale(CROW_SPRITE_SCALE).setAlpha(0.45);
-            this.footprints.setVisible(false);
-          } else if (this.guidanceMode === "nudge") {
-            this.pet.setPosition(425, 650).setScale(CROW_SPRITE_SCALE).setAlpha(0.72);
-            this.footprints.setPosition(360, 675).setAlpha(0.32).setVisible(true);
-          } else {
-            this.pet.setPosition(420, 650).setScale(CROW_SPRITE_SCALE).setAlpha(0.94);
-            this.footprints.setPosition(350, 680).setAlpha(0.58).setVisible(true);
-          }
+          this.pet.setPosition(430, 650).setScale(CROW_SPRITE_SCALE).setAlpha(0.9);
+          this.footprints.setVisible(false);
+          this.crowInteractionReady = true;
+          this.syncCrowInteractionRing();
         }
 
         private startMirrorReveal() {
@@ -624,6 +655,12 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             return;
           }
           this.destination = null;
+          if (action === "mirror") {
+            this.mirrorReady = false;
+            this.introNearest = null;
+            this.introPrompt = "";
+            window.dispatchEvent(new CustomEvent("life-room:onboarding-proximity", { detail: null }));
+          }
           window.dispatchEvent(new CustomEvent("life-room:onboarding-action", { detail: { action } }));
         }
 
@@ -805,7 +842,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
 
         private handleRoomTap(point: Phaser.Math.Vector2) {
           const roomCue = getRoomCue(this.onboardingStep);
-          if (this.onboardingStep === "complete" && this.pet.visible && Math.abs(point.x - this.pet.x) < 45 && Math.abs(point.y - this.pet.y) < 60) {
+          if (this.crowInteractionReady && getPanelAccess(this.onboardingStep, "guide") !== "locked" && this.pet.visible && Math.abs(point.x - this.pet.x) < 70 && Math.abs(point.y - this.pet.y) < 75) {
             this.openPanel(HOTSPOTS.find((hotspot) => hotspot.id === "guide")!);
             return;
           }
@@ -822,7 +859,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
               this.openRoomNote();
               return;
             }
-            const direct = HOTSPOTS.find((hotspot) => getPanelAccess(this.onboardingStep, hotspot.id) !== "locked" && insideHotspot(point.x, point.y, hotspot));
+            const direct = HOTSPOTS.find((hotspot) => getPanelAccess(this.onboardingStep, hotspot.id) !== "locked" && this.insideFurnitureHotspot(point.x, point.y, hotspot));
             if (direct) {
               this.openPanel(direct);
               return;
@@ -845,7 +882,7 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
             this.setWalkDestination(point);
             return;
           }
-          const direct = HOTSPOTS.find((hotspot) => insideHotspot(point.x, point.y, hotspot));
+          const direct = HOTSPOTS.find((hotspot) => this.insideFurnitureHotspot(point.x, point.y, hotspot));
           if (direct) {
             this.openPanel(direct);
             return;
@@ -857,11 +894,8 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           if (this.panelOpen) return;
           const roomCue = getRoomCue(this.onboardingStep);
           if (roomCue) {
-            const nearbyPaper = this.onboardingStep === "reveal" ? FINAL_NOTE_ORDER
-              .map((note) => ({ note, paper: this.finalPapers[note] }))
-              .sort((a, b) => Phaser.Math.Distance.Between(this.hero.x, this.hero.y, a.paper.x, a.paper.y) - Phaser.Math.Distance.Between(this.hero.x, this.hero.y, b.paper.x, b.paper.y))[0]
-              : this.onboardingStep === "companion" && this.instructionPaper.visible ? { note: undefined, paper: this.instructionPaper } : null;
-            if (nearbyPaper && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearbyPaper.paper.x, nearbyPaper.paper.y) < 130) {
+            const nearbyPaper = this.getNearbyRoomPaper();
+            if (nearbyPaper) {
               this.openRoomNote(nearbyPaper.note);
             } else if (this.nearest) {
               this.openPanel(this.nearest);
@@ -975,13 +1009,23 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           return true;
         }
 
+        private insideFurnitureHotspot(x: number, y: number, hotspot: Hotspot) {
+          if (hotspot.id === "guide" && !this.crowInteractionReady) return false;
+          const centerX = hotspot.id === "guide" && this.pet.visible ? this.pet.x + CROW_INTERACTION_OFFSET_X : hotspot.x;
+          const centerY = hotspot.id === "guide" && this.pet.visible ? this.pet.y : hotspot.y;
+          return insideHotspot(x, y, hotspot, centerX, centerY);
+        }
+
         private refreshFurnitureProximity() {
           let nearest: Hotspot | null = null;
           let nearestDistance = Number.POSITIVE_INFINITY;
           for (const hotspot of HOTSPOTS) {
             if (getPanelAccess(this.onboardingStep, hotspot.id) === "locked") continue;
-            const relativeX = (this.hero.x - hotspot.x) / hotspot.radiusX;
-            const relativeY = (this.hero.y - hotspot.y) / hotspot.radiusY;
+            if (hotspot.id === "guide" && !this.crowInteractionReady) continue;
+            const centerX = hotspot.id === "guide" && this.pet.visible ? this.pet.x + CROW_INTERACTION_OFFSET_X : hotspot.x;
+            const centerY = hotspot.id === "guide" && this.pet.visible ? this.pet.y : hotspot.y;
+            const relativeX = (this.hero.x - centerX) / hotspot.radiusX;
+            const relativeY = (this.hero.y - centerY) / hotspot.radiusY;
             const distance = relativeX * relativeX + relativeY * relativeY;
             if (distance <= 1 && distance < nearestDistance) {
               nearest = hotspot;
@@ -994,13 +1038,43 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
           }
         }
 
+        private getNearbyRoomPaper() {
+          const cue = getRoomCue(this.onboardingStep);
+          if (!cue) return null;
+          const candidates: Array<{ note: FinalNote | undefined; paper: Phaser.GameObjects.Container }> = this.onboardingStep === "reveal"
+            ? FINAL_NOTE_ORDER.filter((note) => !this.finalNotesRead[note]).map((note) => ({ note, paper: this.finalPapers[note] }))
+            : this.instructionPaper.visible ? [{ note: undefined, paper: this.instructionPaper }] : [];
+          const nearest = candidates
+            .map((candidate) => ({ ...candidate, distance: Phaser.Math.Distance.Between(this.hero.x, this.hero.y, candidate.paper.x, candidate.paper.y) }))
+            .sort((a, b) => a.distance - b.distance)[0];
+          return nearest && nearest.distance < PAPER_INTERACTION_RADIUS ? nearest : null;
+        }
+
+        private refreshRoomCueProximity(force = false) {
+          const nearbyPaper = this.getNearbyRoomPaper();
+          const prompt = nearbyPaper ? "Open the folded note" : "";
+          if (!force && prompt === this.paperPrompt) return;
+          this.paperPrompt = prompt;
+          window.dispatchEvent(new CustomEvent("life-room:onboarding-proximity", { detail: prompt ? { action: "paper", label: prompt } : null }));
+        }
+
+        private syncCrowInteractionRing() {
+          const guideRing = this.hotspotRings.find(({ id }) => id === "guide")?.ring;
+          if (!guideRing) return;
+          const visible = this.crowInteractionReady && this.pet.visible && getPanelAccess(this.onboardingStep, "guide") !== "locked";
+          guideRing.setVisible(visible);
+          if (visible) guideRing.setPosition(this.pet.x + CROW_INTERACTION_OFFSET_X, this.pet.y);
+        }
+
         update(_time: number, delta: number) {
           if (!this.keys || this.panelOpen) return;
           if (this.updatePinchZoom()) return;
           this.updateHero(delta);
+          this.syncCrowInteractionRing();
           const roomCue = getRoomCue(this.onboardingStep);
           if (roomCue) {
             this.refreshFurnitureProximity();
+            this.refreshRoomCueProximity();
             if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) this.performCurrentInteraction();
             return;
           }
@@ -1023,22 +1097,48 @@ export function RoomGame({ paused, memoryLevel, atmosphere, onboardingStep, guid
         }
       }
 
-      gameRef.current = new Phaser.Game({
+      const host = hostRef.current;
+      const initialWidth = Math.max(1, host.clientWidth || ROOM_WORLD_WIDTH);
+      const initialHeight = Math.max(1, host.clientHeight || ROOM_WORLD_HEIGHT);
+      const initialDensity = getRenderDensity(initialWidth, initialHeight);
+      const game = new Phaser.Game({
         type: Phaser.AUTO,
-        parent: hostRef.current,
-        width: hostRef.current.clientWidth || ROOM_WORLD_WIDTH,
-        height: hostRef.current.clientHeight || ROOM_WORLD_HEIGHT,
+        parent: host,
+        width: Math.round(initialWidth * initialDensity),
+        height: Math.round(initialHeight * initialDensity),
         backgroundColor: "#2f2841",
         scene: DreamRoomScene,
         transparent: false,
         render: { antialias: true, pixelArt: false, roundPixels: false },
-        scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
+        scale: { mode: Phaser.Scale.NONE, zoom: 1 / initialDensity, autoCenter: Phaser.Scale.CENTER_BOTH },
       });
+      gameRef.current = game;
+
+      const resizeRenderer = () => {
+        if (cancelled || !hostRef.current) return;
+        const cssWidth = Math.max(1, hostRef.current.clientWidth);
+        const cssHeight = Math.max(1, hostRef.current.clientHeight);
+        const density = getRenderDensity(cssWidth, cssHeight);
+        const renderWidth = Math.round(cssWidth * density);
+        const renderHeight = Math.round(cssHeight * density);
+        const zoom = 1 / density;
+        if (Math.abs(game.scale.zoom - zoom) > 0.001) game.scale.setZoom(zoom);
+        if (game.scale.width !== renderWidth || game.scale.height !== renderHeight) {
+          game.scale.resize(renderWidth, renderHeight);
+        }
+        game.canvas.style.width = `${cssWidth}px`;
+        game.canvas.style.height = `${cssHeight}px`;
+      };
+
+      resizeObserver = new ResizeObserver(resizeRenderer);
+      resizeObserver.observe(host);
+      resizeRenderer();
     }
 
     void mountGame();
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };

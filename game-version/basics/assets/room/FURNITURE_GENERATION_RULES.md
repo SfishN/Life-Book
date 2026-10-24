@@ -4,13 +4,13 @@ This is the specification for the current 1536 x 1024 room. Here **width** means
 
 ## Anchor convention
 
-Every room image currently uses a **top-left anchor**. Its anchor position is `(x, y)`, and its transparent PNG canvas must be exactly `width x height`. For example, the bed's anchor is `(545, 255)` and its PNG is exactly `500 x 355`. The renderer draws the image from x=545 through x=1045 and from y=255 through y=610.
+Every room image currently uses a **top-left anchor**. Its anchor position is `(x, y)`, and `width x height` is its in-room display rectangle. The editable PNG stays at full resolution; Phaser scales it into that rectangle. For example, the bed's anchor is `(545, 255)` and its display size is `500 x 355`.
 
-Do not put an object on a 1536 x 1024 transparent sheet to position it. The PNG canvas should have the exact dimensions listed below; the anchor in `src/room/roomLayers.json` positions that canvas. Leave only a small transparent margin so no leg, hanging cord, or shadow is cut off.
+Do not put an object on a 1536 x 1024 transparent sheet to position it. Keep the source at its generated high resolution and the same aspect ratio as the display rectangle; the anchor and target in `src/room/roomLayers.json` place and scale it. Leave only a small transparent margin so no leg, hanging cord, or shadow is cut off.
 
 ## Exact image specification
 
-The active PNGs below live in `dark_rose/items/`, except the room base. The `default` folder is retained as a reference. The order in this table is also the current back-to-front drawing order. Keep the room base at 1536 x 1024.
+The active PNGs below live in `dark_rose/source/`, except the room base. The `default` folder is retained as a reference. The order in this table is also the current back-to-front drawing order. Keep the room base at 1536 x 1024.
 
 | Order | Element and PNG filename | Anchor X | Anchor Y | Width | Height | Surface / use |
 | ---: | --- | ---: | ---: | ---: | ---: | --- |
@@ -47,7 +47,7 @@ The game also uses interaction points. They are **not image anchors**: the playe
 
 The approach center and radius select the nearby `E` interaction. Direct clicks use the listed rectangles instead of the approach circles, so each panel opens from its visible furniture. Update both values in `src/room/RoomGame.tsx` if an object moves.
 
-Introduction objects are separate game effects. The window mark is centered at `(1200, 420)` with a 44-pixel radius. Clicking near `(1200, 445)` within 165 pixels opens it; its reachable floor approach point is `(1195, 705)` with a 130-pixel radius. The envelope is displayed at center `(1160, 655)` with size `185 x 185`. The mirror can be clicked near `(490, 455)` within 150 pixels, while its floor approach point is `(520, 650)` with a 130-pixel radius. These are not furniture PNGs in `dark_rose/items/`.
+Introduction objects are separate game effects. The window mark is centered at `(1200, 420)` with a 44-pixel radius. Clicking near `(1200, 445)` within 165 pixels opens it; its reachable floor approach point is `(1195, 705)` with a 130-pixel radius. The envelope is displayed at center `(1160, 655)` with size `185 x 185`. The mirror can be clicked near `(490, 455)` within 150 pixels, while its floor approach point is `(520, 650)` with a 130-pixel radius. These are not furniture PNGs in `dark_rose/source/`.
 
 ## Character walkable area
 
@@ -65,12 +65,12 @@ Edit `WALKABLE_FLOOR`, `SOLID_FURNITURE`, and `HERO_FOOT_CLEARANCE` in `src/room
 
 ## How to generate the next item
 
-1. Attach the chosen theme base (currently `dark_rose/01_room_base.png`) and `current_layout_preview.webp` as visual references. State the item, its surface (left wall, right wall, floor, or ceiling), its exact canvas width and height from the table, and its anchor `(x, y)`.
+1. Attach the chosen theme base (currently `dark_rose/01_room_base.png`) and `dark_rose/current_layout_preview.webp` as visual references. State the item, its surface (left wall, right wall, floor, or ceiling), its target width and height from the table, and its anchor `(x, y)`.
 2. Ask for **one complete object only**, in the same elevated three-quarter camera, warm painted style, outline weight, and light direction. The two horizontal directions of floor furniture must follow the room tiles; vertical edges stay vertical.
 3. Request an RGBA PNG with a transparent background and the **exact canvas dimensions** in the table. Do not include a room, painted floor, text, or another object. Do not remove feet, wall brackets, hanging cords, or contact shadow.
 4. If the image generator cannot output that exact pixel size, place its result into an exact-size transparent canvas in an image editor. Keep the whole object and its proportions. Do not stretch width and height independently.
-5. Replace the matching PNG in `dark_rose/items/`. Do not edit the generated WebP in `public/room/layers/`. Run `python scripts/build_room_layers.py` from the `game-version` directory, then refresh the preview.
-6. The builder **does not crop or resize**. It refuses a PNG whose dimensions differ from `roomLayers.json`. For a new furniture type, add a new exact-size PNG and manifest entry, then update this table and any interaction point.
+5. Replace the matching full-resolution PNG in `dark_rose/source/`. Do not edit the runtime copy in `public/room/layers/`. Run `python scripts/build_room_layers.py` from the `game-version` directory, then refresh the preview.
+6. The builder copies the original PNG bytes without resizing or lossy conversion; Phaser applies the target display size. For a new furniture type, add a high-resolution PNG and manifest entry, then update this table and any interaction point.
 
 Suggested prompt:
 
@@ -85,4 +85,4 @@ A text prompt cannot reliably repair an object drawn from the wrong camera angle
 - The list order controls overlap: wall decoration behind standing furniture, rug below desk and bed, plants in front where appropriate.
 - `current_layout_preview.webp` is rebuilt from the manifest. Check it at 1536 x 1024 after replacing an image. It shows the static room, without the moving character and game effects.
 
-The loose `desk_chair.png` in `basics/assets/room/` is a 1536 x 1024 draft and is **not loaded** by the game. To use it as the desk, prepare `dark_rose/items/room-desk.png` at exactly `290 x 245`, then rebuild.
+The loose `desk_chair.png` in `basics/assets/room/` is a 1536 x 1024 draft and is **not loaded** by the game. To use it as the desk, prepare a full-resolution `dark_rose/source/room-desk.png` with the target aspect ratio, then rebuild.

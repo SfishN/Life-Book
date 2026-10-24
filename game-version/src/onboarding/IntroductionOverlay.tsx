@@ -1,19 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import {
   Award,
   BedDouble,
   Bird,
   BookHeart,
   BookOpenText,
-  Eye,
   Leaf,
   MousePointer2,
   Sparkles,
-  X,
 } from "lucide-react";
-import type { FinalNote, GuidanceMode, OnboardingStep, StoryNote } from "@/domain/onboarding";
+import type { FinalNote, OnboardingStep, StoryNote } from "@/domain/onboarding";
 import type { PanelId } from "@/domain/types";
 import { getRoomCue } from "./roomCues";
 
@@ -24,14 +23,12 @@ interface IntroductionOverlayProps {
   showInstruction: boolean;
   reviewMode: boolean;
   activeFinalNote: FinalNote | null;
-  guidanceMode: GuidanceMode;
   onBegin: () => void;
   onContinue: () => void;
   onExplore: () => void;
   onComplete: () => void;
   onCloseRoomNote: () => void;
   onReadFinalNote: (note: FinalNote) => void;
-  onGuidanceMode: (mode: GuidanceMode) => void;
   onOpenPanel: (panel: PanelId) => void;
 }
 
@@ -55,15 +52,35 @@ function HandLine({ hand, children }: { hand: "round" | "sharp"; children: React
 }
 
 function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onContinue: () => void }) {
+  const [paperReady, setPaperReady] = useState(false);
+
+  useEffect(() => {
+    const interact = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "e" || event.repeat || !paperReady) return;
+      event.preventDefault();
+      onContinue();
+    };
+    window.addEventListener("keydown", interact);
+    return () => window.removeEventListener("keydown", interact);
+  }, [onContinue, paperReady]);
+
+  const paperProps = {
+    decoding: "sync" as const,
+    preload: true,
+    unoptimized: true,
+    onLoad: () => setPaperReady(true),
+    onError: () => setPaperReady(true),
+  };
+
   if (note === "envelope") {
     return (
-      <section className="story-note story-note-envelope" role="dialog" aria-modal="true" aria-labelledby="envelope-note-title" tabIndex={-1} autoFocus>
-        <Image src="/onboarding/notes/note-paper-overlap.png" alt="" aria-hidden="true" width={1536} height={1024} unoptimized />
-        <div className="story-note-copy">
+      <section className={`story-note story-note-envelope ${paperReady ? "is-paper-ready" : "is-paper-loading"}`} role="dialog" aria-modal="true" aria-busy={!paperReady} aria-labelledby="envelope-note-title" tabIndex={-1} autoFocus>
+        <Image src="/onboarding/notes/note-paper-overlap.webp" alt="" aria-hidden="true" width={1536} height={1024} {...paperProps} />
+        <div className="story-note-copy" aria-hidden={!paperReady}>
           <h1 id="envelope-note-title">FOR THE ONE IN THE MIDDLE</h1>
           <div className="handwriting handwriting-a"><p>Go to the window.<br />Do not answer anything that knocks.</p></div>
           <div className="handwriting handwriting-b"><p>Do not go to the window.<br />Do not trust the other hand.</p></div>
-          <button className="primary-button" type="button" onClick={onContinue}>Fold the paper</button>
+          <button className="primary-button story-note-action" type="button" onClick={onContinue} aria-keyshortcuts="E"><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>Fold the paper</span></button>
         </div>
       </section>
     );
@@ -71,27 +88,27 @@ function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onCo
 
   if (note === "window") {
     return (
-      <section className="story-note story-note-window" role="dialog" aria-modal="true" aria-label="Window note" tabIndex={-1} autoFocus>
-        <Image src="/onboarding/notes/leaf-note.png" alt="" aria-hidden="true" width={1536} height={1024} unoptimized />
-        <div className="story-note-copy">
+      <section className={`story-note story-note-window ${paperReady ? "is-paper-ready" : "is-paper-loading"}`} role="dialog" aria-modal="true" aria-busy={!paperReady} aria-label="Window note" tabIndex={-1} autoFocus>
+        <Image src="/onboarding/notes/leaf-note.webp" alt="" aria-hidden="true" width={1536} height={1024} {...paperProps} />
+        <div className="story-note-copy" aria-hidden={!paperReady}>
           <div className="handwriting handwriting-b"><p>Why you trusted him?<br />Although he has the ending, it does not mean he knows how it began.<br />He is such a crazy person.</p></div>
           <div className="handwriting handwriting-a"><p>When the light breaks, catch the fireflies.<br />Bring the net.</p></div>
-          <button className="primary-button" type="button" onClick={onContinue}>Take the net</button>
+          <button className="primary-button story-note-action" type="button" onClick={onContinue} aria-keyshortcuts="E"><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>Take the net</span></button>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="story-note story-note-mirror" role="dialog" aria-modal="true" aria-label="Mirror notes" tabIndex={-1} autoFocus>
-      <Image src="/onboarding/notes/note-paper-overlap.png" alt="" aria-hidden="true" width={1536} height={1024} unoptimized />
-      <div className="story-note-copy mirror-exchange">
+    <section className={`story-note story-note-mirror ${paperReady ? "is-paper-ready" : "is-paper-loading"}`} role="dialog" aria-modal="true" aria-busy={!paperReady} aria-label="Mirror notes" tabIndex={-1} autoFocus>
+      <Image src="/onboarding/notes/note-paper-overlap.webp" alt="" aria-hidden="true" width={1536} height={1024} {...paperProps} />
+      <div className="story-note-copy mirror-exchange" aria-hidden={!paperReady}>
         <HandLine hand="sharp">How many did you take?</HandLine>
         <HandLine hand="round">I&apos;m not sure. Eight?</HandLine>
         <HandLine hand="sharp">You do not know?</HandLine>
         <HandLine hand="round">Not in my time anymore.</HandLine>
         <HandLine hand="sharp">Why there is one in my room?</HandLine>
-        <button className="primary-button" type="button" onClick={onContinue}>Follow the small shadow</button>
+        <button className="primary-button story-note-action" type="button" onClick={onContinue} aria-keyshortcuts="E"><kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>Follow the small shadow</span></button>
       </div>
     </section>
   );
@@ -99,12 +116,32 @@ function NoteDialog({ note, onContinue }: { note: Exclude<StoryNote, null>; onCo
 
 function RoomPaper({ step, activeFinalNote, onCloseRoomNote, onExplore, onReadFinalNote }: Pick<IntroductionOverlayProps, "step" | "activeFinalNote" | "onCloseRoomNote" | "onExplore" | "onReadFinalNote">) {
   const cue = getRoomCue(step);
-  if (!cue) return null;
   const story = activeFinalNote !== null;
+
+  useEffect(() => {
+    if (!cue) return;
+    const interact = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "e" || event.repeat) return;
+      event.preventDefault();
+      if (activeFinalNote) onReadFinalNote(activeFinalNote);
+      else if (cue.panel) onExplore();
+      else onCloseRoomNote();
+    };
+    window.addEventListener("keydown", interact);
+    return () => window.removeEventListener("keydown", interact);
+  }, [activeFinalNote, cue, onCloseRoomNote, onExplore, onReadFinalNote]);
+
+  if (!cue) return null;
+
+  const actionLabel = activeFinalNote ? "Finish reading" : step === "companion" ? "Meet the little crow" : cue.panel ? "Look closer" : "Fold the note";
+  const action = () => {
+    if (activeFinalNote) onReadFinalNote(activeFinalNote);
+    else if (cue.panel) onExplore();
+    else onCloseRoomNote();
+  };
 
   return (
     <section className={"room-paper-note" + (story ? " room-paper-story" : "")} role="dialog" aria-modal="true" aria-label={cue.object + " note"} tabIndex={-1} autoFocus>
-      <button className="room-paper-close" type="button" onClick={onCloseRoomNote} aria-label="Fold the note"><X size={18} /></button>
       <div className="room-paper-writing">
         {!story && <><HandLine hand="round">{cue.round}</HandLine><HandLine hand="sharp">{cue.sharp}</HandLine></>}
         {step === "companion" && <><HandLine hand="sharp">There. Eight legs. That was the number of legs.</HandLine><HandLine hand="round">It looks better when it moves.</HandLine><HandLine hand="sharp">Are you serious?</HandLine></>}
@@ -142,27 +179,25 @@ function RoomPaper({ step, activeFinalNote, onCloseRoomNote, onExplore, onReadFi
         </>}
       </div>
       <div className="room-paper-actions">
-        {activeFinalNote ? <button className="primary-button" type="button" onClick={() => onReadFinalNote(activeFinalNote)}>Finish reading</button>
-          : step === "companion" ? <button className="primary-button" type="button" onClick={onExplore}>Meet the little crow</button>
-            : cue.panel ? <button className="primary-button" type="button" onClick={onExplore}>Look closer</button>
-            : <button className="small-button" type="button" onClick={onCloseRoomNote}>Fold the note</button>}
+        <button className={cue.panel || activeFinalNote ? "primary-button" : "small-button"} type="button" onClick={action} aria-keyshortcuts="E">
+          <kbd>E</kbd><span className="touch-interact-label" aria-hidden="true">Tap</span><span>{actionLabel}</span>
+        </button>
       </div>
     </section>
   );
 }
-function FunctionReview({ guidanceMode, onGuidanceMode, onOpenPanel, onComplete }: Pick<IntroductionOverlayProps, "guidanceMode" | "onGuidanceMode" | "onOpenPanel" | "onComplete">) {
+function FunctionReview({ onOpenPanel, onComplete }: Pick<IntroductionOverlayProps, "onOpenPanel" | "onComplete">) {
   return (
     <section className="function-introduction" role="dialog" aria-modal="true" aria-labelledby="functions-title" tabIndex={-1} autoFocus>
       <header><div><p className="overline">Six places · your decisions</p><h1 id="functions-title">Review the room functions</h1></div><Sparkles size={26} aria-hidden="true" /></header>
       <div className="function-teaching-grid">{FUNCTIONS.map((item) => { const Icon = item.icon; return <button type="button" key={item.id} onClick={() => onOpenPanel(item.id)}><Icon size={20} /><span><strong>{item.object} — {item.name}</strong><small>{item.copy}</small></span></button>; })}</div>
-      <fieldset className="guidance-choice"><legend>How closely should the room point the way?</legend>{([ ["quiet", "Quiet", "Show guidance only when requested."], ["nudge", "Nudge", "Offer a small environmental hint after hesitation."], ["lead", "Lead", "Show a clear route and the next interaction."] ] as const).map(([mode, label, copy]) => <button type="button" className={guidanceMode === mode ? "is-selected" : ""} aria-pressed={guidanceMode === mode} key={mode} onClick={() => onGuidanceMode(mode)}><Eye size={17} /><span><strong>{label}</strong><small>{copy}</small></span></button>)}</fieldset>
       <div className="intro-actions"><button className="primary-button" type="button" onClick={onComplete}>Return to room</button></div>
     </section>
   );
 }
 
-export function IntroductionOverlay({ note, step, showArrival, showInstruction, reviewMode, activeFinalNote, guidanceMode, onBegin, onContinue, onExplore, onComplete, onCloseRoomNote, onReadFinalNote, onGuidanceMode, onOpenPanel }: IntroductionOverlayProps) {
-  if (note) return <div className="intro-backdrop story-backdrop"><NoteDialog note={note} onContinue={onContinue} /></div>;
+export function IntroductionOverlay({ note, step, showArrival, showInstruction, reviewMode, activeFinalNote, onBegin, onContinue, onExplore, onComplete, onCloseRoomNote, onReadFinalNote, onOpenPanel }: IntroductionOverlayProps) {
+  if (note) return <div className="intro-backdrop story-backdrop"><NoteDialog key={note} note={note} onContinue={onContinue} /></div>;
 
   if (showArrival) {
     return (
@@ -171,7 +206,7 @@ export function IntroductionOverlay({ note, step, showArrival, showInstruction, 
   }
 
   if (showInstruction) {
-    if (reviewMode) return <div className="intro-backdrop function-backdrop"><FunctionReview guidanceMode={guidanceMode} onGuidanceMode={onGuidanceMode} onOpenPanel={onOpenPanel} onComplete={onComplete} /></div>;
+    if (reviewMode) return <div className="intro-backdrop function-backdrop"><FunctionReview onOpenPanel={onOpenPanel} onComplete={onComplete} /></div>;
     return <RoomPaper step={step} activeFinalNote={activeFinalNote} onCloseRoomNote={onCloseRoomNote} onExplore={onExplore} onReadFinalNote={onReadFinalNote} />;
   }
 

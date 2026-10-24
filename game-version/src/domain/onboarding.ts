@@ -16,7 +16,6 @@ export type OnboardingStep =
   | "adoption"
   | "complete";
 
-export type GuidanceMode = "quiet" | "nudge" | "lead";
 export type OnboardingStatus = "not-started" | "in-progress" | "complete";
 export type StoryNote = "envelope" | "window" | "mirror" | null;
 export const FINAL_NOTE_ORDER = ["reveal", "crow", "adoption"] as const;
@@ -27,7 +26,6 @@ export interface OnboardingState {
   version: 1;
   status: OnboardingStatus;
   step: OnboardingStep;
-  guidanceMode: GuidanceMode;
   completedAt: string | null;
   finalNotesRead: FinalNotesRead;
 }
@@ -54,14 +52,11 @@ const STEPS = new Set<OnboardingStep>([
   "adoption",
   "complete",
 ]);
-const MODES = new Set<GuidanceMode>(["quiet", "nudge", "lead"]);
-
 export function createOnboardingState(): OnboardingState {
   return {
     version: 1,
     status: "not-started",
     step: "arrival",
-    guidanceMode: "nudge",
     completedAt: null,
     finalNotesRead: { reveal: false, crow: false, adoption: false },
   };
@@ -75,9 +70,6 @@ export function readOnboardingState(storage: StorageLike): OnboardingState {
     const parsed = JSON.parse(raw) as Partial<OnboardingState>;
     if (parsed.version !== 1) return fallback;
     const step = STEPS.has(parsed.step as OnboardingStep) ? (parsed.step as OnboardingStep) : fallback.step;
-    const guidanceMode = MODES.has(parsed.guidanceMode as GuidanceMode)
-      ? (parsed.guidanceMode as GuidanceMode)
-      : fallback.guidanceMode;
     const status: OnboardingStatus = parsed.status === "complete" && step === "complete"
       ? "complete"
       : step === "arrival"
@@ -87,7 +79,6 @@ export function readOnboardingState(storage: StorageLike): OnboardingState {
       version: 1,
       status,
       step: status === "complete" ? "complete" : step,
-      guidanceMode,
       completedAt: status === "complete" && typeof parsed.completedAt === "string" ? parsed.completedAt : null,
       finalNotesRead: {
         reveal: parsed.finalNotesRead?.reveal === true,
@@ -116,8 +107,3 @@ export function moveOnboardingTo(state: OnboardingState, step: OnboardingStep): 
     completedAt: step === "complete" ? new Date().toISOString() : null,
   };
 }
-
-export function setGuidanceMode(state: OnboardingState, guidanceMode: GuidanceMode): OnboardingState {
-  return { ...state, guidanceMode };
-}
-
